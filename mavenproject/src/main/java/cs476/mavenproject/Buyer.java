@@ -10,7 +10,7 @@ public class Buyer {
 	private ArrayList<Buyer> following = new ArrayList<Buyer>();
 	Cart cart;
 	Database DB;
-	public Buyer(String id, String username, String password, String address) {
+	public Buyer(final String id, final String username, final String password, final String address) {
 
 		this.id = id;
 		this.username = username;
@@ -22,8 +22,8 @@ public class Buyer {
 	}
 
 	// TODO: Load buyer from database
-	public Buyer(String id) {
-
+	public Buyer(final String id) {
+		Buyer temp = DB.findBuyer(id);
 	}
 
 	public String id() {
