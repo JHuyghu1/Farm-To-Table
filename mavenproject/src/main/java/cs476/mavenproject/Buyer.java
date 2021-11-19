@@ -17,6 +17,7 @@ public class Buyer {
 		this.password = password;
 		this.address = address;
 		this.cart = new Cart(this);
+		//this.id = DB.addBuyertoDatabase(username, pass, address);
 
 	}
 
