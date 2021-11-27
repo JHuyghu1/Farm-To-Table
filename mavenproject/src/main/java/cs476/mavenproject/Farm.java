@@ -16,12 +16,13 @@ public class Farm {
 		this.id = id;
 		this.username = username;
 		this.password = password;
+		//this.id = DB.createFarm(id, username, password);
 
 	}
 
 	// Constructor from DB
 	public Farm(String id) {
-
+		Farm temp = DB.findFarm(id);
 	}
 
 	public String id() {
@@ -48,6 +49,7 @@ public class Farm {
 		// TODO: Add farm sells product relationship
 		if (!inventory.contains(product)) {
 			inventory.add(product);
+			//DB.addProductToFarm(<need Farm object>, product);
 		} else {
 			System.out.println(product.name() + " already exists. Use addExistingProduct()\n");
 
@@ -59,6 +61,7 @@ public class Farm {
 		// TODO: Edit farm sells product relationship
 		if (inventory.contains(product)) {
 			inventory.get(inventory.indexOf(product)).increaseQuantity(amount);
+			//need to get Farm object
 
 		} else {
 			System.out.println(product.name() + " wasn't found.\n");

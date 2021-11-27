@@ -23,12 +23,13 @@ public class Cart {
 		this.cost = cost;
 		this.products = products;
 		this.payloadWeight = payloadWeight;
+		//DB.addCartToDatabase(buyer, id, products, payloadWeight, cost);
 
 	}
 
 	// TODO: Get order from database
 	public Cart(String id) {
-
+		//Cart temp = DB.findCart(id);
 	}
 
 	// Copy constructor

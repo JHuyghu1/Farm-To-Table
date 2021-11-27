@@ -17,7 +17,7 @@ public class Buyer {
 		this.password = password;
 		this.address = address;
 		this.cart = new Cart(this);
-		//this.id = DB.addBuyertoDatabase(username, pass, address);
+		//this.id = DB.addBuyertoDatabase(username, password, address);
 
 	}
 
@@ -64,6 +64,7 @@ public class Buyer {
 
 		if (!isFollowing(buyer)) {
 			following.add(buyer);
+			//DB.followUser(buyer.username()); get Buyer a's username 
 			// TODO: Add relationship to database
 
 		} else {
