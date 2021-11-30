@@ -39,12 +39,13 @@ public class Product {
 		this.weight = subCategory.weight();
 		this.quantityLeft = quantityLeft;
 		this.quantityWanted = quantityWanted;
+		//DB.addProductToDatabase(id, farm, name, category, subCategory, price, quantityLeft, quantityWanted);
 
 	}
 
 	// Constructor from DB
 	public Product(String id) {
-
+		//DB.findProduct(id);
 	}
 
 	// Copy constructor
@@ -141,3 +142,4 @@ public class Product {
 	}
 
 }
+

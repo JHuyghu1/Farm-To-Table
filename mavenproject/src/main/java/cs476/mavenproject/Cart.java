@@ -30,6 +30,7 @@ public class Cart {
 	// TODO: Get order from database
 	public Cart(String id) {
 		//Cart temp = DB.findCart(id);
+		//need to find a way to return cart object with ArrayList variable in it, within neo4j
 	}
 
 	// Copy constructor

@@ -64,7 +64,7 @@ public class Buyer {
 
 		if (!isFollowing(buyer)) {
 			following.add(buyer);
-			//DB.followUser(buyer.username()); get Buyer a's username 
+			//DB.followUser(username, buyer.username()); get Buyer a's username 
 			// TODO: Add relationship to database
 
 		} else {
@@ -78,6 +78,7 @@ public class Buyer {
 
 		if (isFollowing(buyer)) {
 			following.remove(buyer);
+			//DB.unfollowUser(username, buyer.username());
 			// TODO: Remove relationship from database
 
 		} else {
