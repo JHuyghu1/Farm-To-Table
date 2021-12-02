@@ -7,7 +7,9 @@ public class Menus {
     Database DB;
     Buyer mainBuyer = new Buyer();
     Farm mainFarm = new Farm();
+    Categories categories = new Categories();
     Login Login;
+    HeadQ HeadQ;
     Scanner input;
 
     static String INVAL_SEL = " is an invalid selction!";
@@ -16,6 +18,7 @@ public class Menus {
         this.DB = DB;
         this.input = input;
         Login = new Login(DB, input, mainBuyer, mainFarm);
+        HeadQ = new HeadQ(DB, input, categories);
     }
         
     public void login() {
@@ -40,6 +43,13 @@ public class Menus {
             break;
             
             case "3":
+                Utils.clearConsole();
+                Boolean auth = Login.loginAdmin();
+                if(auth){
+                    adminMain();
+                } else {
+                    login();
+                }
             break;
 
             case "4":
@@ -161,7 +171,7 @@ public class Menus {
         System.out.println(" | 3 - Back");
         System.out.println("---------------------------------------");
 
-        mainBuyer.cart.view();
+        mainBuyer.cart.viewProducts();
 
         selection = input.nextLine();
 
@@ -181,6 +191,82 @@ public class Menus {
             Utils.clearConsole();
             System.out.println(selection + INVAL_SEL);
             buyerCart();
+
+        }
+        
+    }
+
+    public void adminMain() {
+        String selection;
+
+        System.out.println("Admin Menu");
+        System.out.println("----------");
+        System.out.println("1 - Live Orders");
+        System.out.println("2 - Inventory");
+        System.out.println("3 - Logout");
+
+        selection = input.nextLine();
+
+        switch(selection){
+            case "1":
+            break;
+
+            case "2":
+            Utils.clearConsole();
+            adminInventory();
+            break;
+            
+            case "3":
+            Utils.clearConsole();
+            login();
+            break;
+
+            default:
+            Utils.clearConsole();
+            System.out.println(selection + INVAL_SEL);
+            adminMain();
+
+        }
+        
+    }
+
+    public void adminInventory() {
+        String selection;
+
+        System.out.println("Head Quarters Inventory");
+        System.out.println("-----------------------");
+        System.out.print("\n1 - Add Farm");
+        System.out.print(" | 2 - Add New Product");
+        System.out.print(" | 3 - Add Existing Product");
+        System.out.println(" | 4 - Back");
+        System.out.println("-----------------------------------------");
+
+        HeadQ.viewInventory();
+
+        selection = input.nextLine();
+
+        switch(selection){
+            case "1":
+                Utils.clearConsole();
+                HeadQ.createNewFarm();
+                adminInventory();
+                break;
+
+            case "2":
+                break;
+            
+            case "3":
+                break;
+
+            case "4":
+                Utils.clearConsole();
+                adminMain();
+                break;
+
+            default:
+                Utils.clearConsole();
+                System.out.println(selection + INVAL_SEL);
+                adminInventory();
 
         }
         

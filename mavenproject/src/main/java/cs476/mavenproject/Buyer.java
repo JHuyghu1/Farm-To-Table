@@ -108,7 +108,7 @@ public class Buyer {
 	public void viewPurchaseHistory() {
 
 		for (Cart cart : purchaseHistory) {
-			cart.view();
+			cart.viewProducts();
 			System.out.println();
 
 		}
@@ -116,7 +116,7 @@ public class Buyer {
 
 	public void checkout() {
 
-		if (cart.contents().size() > 0) {
+		if (cart.getProducts().size() > 0) {
 			this.purchaseHistory().add(cart.copy());
 			cart.checkout();
 			this.cart = new Cart(this);

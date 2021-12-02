@@ -1,62 +1,38 @@
 package cs476.mavenproject;
-//import SubCategory;
-//import cs476.farm_to_table.Categories;
-//import cs476.farm_to_table.Farm;
+
+import cs476.mavenproject.Categories.Category;
 
 public class Product {
-
-	private String id;
-	private Farm farm;
+	private String identity;
 	private Category category;
 	private SubCategory subCategory;
 	private String name;
 	private double price;
 	private double weight;
-	private int quantityLeft;
-	private int quantityWanted = 0;
+	private int quantity;
+	Database DB;
 
 	// Constructor from Client
-	public Product(String id, Farm farm, String name, Category category, SubCategory subCategory, double price,
-			int quantityLeft) {
-		this.id = id;
-		this.farm = farm;
+	public Product(Database DB, String identity, String name, Category category, SubCategory subCategory, double price, int quantity) {
+		this.identity = identity;
 		this.name = name;
 		this.category = category;
 		this.subCategory = subCategory;
 		this.price = price;
 		this.weight = subCategory.weight();
-		this.quantityLeft = quantityLeft;
-	}
-
-	public Product(String id, Farm farm, String name, Category category, SubCategory subCategory, double price,
-			int quantityLeft, int quantityWanted) {
-		this.id = id;
-		this.farm = farm;
-		this.name = name;
-		this.category = category;
-		this.subCategory = subCategory;
-		this.price = price;
-		this.weight = subCategory.weight();
-		this.quantityLeft = quantityLeft;
-		this.quantityWanted = quantityWanted;
-		//DB.addProductToDatabase(id, farm, name, category, subCategory, price, quantityLeft, quantityWanted);
-
+		this.quantity = quantity;
 	}
 
 	// Constructor from DB
-	public Product(String id) {
+	public Product(int id) {
 		//DB.findProduct(id);
 	}
 
 	// Copy constructor
 	public Product copy() {
 
-		return new Product(id, farm, name, category, subCategory, price, quantityLeft, quantityWanted);
+		return new Product(DB,identity, name, category, subCategory, price, quantity);
 
-	}
-
-	public String id() {
-		return id;
 	}
 
 	public Category category() {
@@ -79,52 +55,24 @@ public class Product {
 		return name;
 	}
 
-	public int quantityLeft() {
-		return quantityLeft;
+	public int quantity() {
+		return quantity;
 	}
 
-	public int quantityWanted() {
-
-		return quantityWanted;
-	}
-
-	public void resetQuantityWanted() {
-		quantityWanted = 0;
-	}
-
-	public void increaseQuantityWanted(int amount) {
-
-		if (quantityWanted + amount <= quantityLeft) {
-			quantityWanted += amount;
-		} else {
-			System.out.println("Can't set quantity wanted, not enough supply");
-
-		}
-	}
-
-	public void decreaseQuantityWanted(int amount) {
-
-		if (quantityWanted - amount > 0) {
-			quantityWanted -= amount;
-		} else {
-			this.resetQuantityWanted();
-
-		}
-	}
-
-	public void increaseQuantity(int amount) {
-		quantityLeft += amount;
+	//TODO: Update DB amount
+	public void restock(int amount) {
+		quantity += amount;
 	}
 
 	public void decreaseQuantity(int amount) {
 
-		if (quantityLeft - amount >= 0) {
+		if (quantity - amount >= 0) {
 
-			quantityLeft -= amount;
+			quantity -= amount;
 
 		} else {
 
-			System.out.println("Can't remove low supply: " + quantityLeft + " left");
+			System.out.println("Can't remove low supply: " + quantity + " left");
 		}
 
 	}
@@ -134,10 +82,10 @@ public class Product {
 		return cartView
 
 				? name + " | " + category.name() + " - " + subCategory.name() + " | Price: $" + price
-						+ " | Serving Size: " + weight + " grams | In Cart: " + quantityWanted
+						+ " | Serving Size: " + weight + " grams | In Cart: "
 
 				: name + " | " + category.name() + " - " + subCategory.name() + " | Price: $" + price
-						+ " | Serving Size: " + weight + " grams | Quiantity Left: " + quantityLeft;
+						+ " | Serving Size: " + weight + " grams | Quiantity Left: " + quantity;
 
 	}
 

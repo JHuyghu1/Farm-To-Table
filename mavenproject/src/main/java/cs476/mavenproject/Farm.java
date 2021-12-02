@@ -3,8 +3,6 @@ import java.util.ArrayList;
 
 
 public class Farm {
-
-	private String id;
 	private String username;
 	private String password;
 	private ArrayList<Product> inventory = new ArrayList<Product>();
@@ -15,21 +13,16 @@ public class Farm {
 	public Farm(){};
 
 	// Constructor from client
-	public Farm(String id, String username, String password) {
-		this.id = id;
+	public Farm(Database DB, String username, String password) {
+		this.DB = DB;
 		this.username = username;
 		this.password = password;
-		//this.id = DB.createFarm(id, username, password);
-
 	}
-
+	
 	// Constructor from DB
-	public Farm(String id) {
-		Farm temp = DB.findFarm(id);
-	}
-
-	public String id() {
-		return id;
+	public Farm(String username) {
+		//TODO: Pull farm from db
+		
 	}
 
 	public String name() {
@@ -40,6 +33,18 @@ public class Farm {
 		return password;
 	}
 
+	//TODO: Pull sold history from db
+	public void pullSoldHistory(){
+
+	}
+
+	//TODO: Pull current invortory from db
+	public void pullInventory(){
+	
+	}
+
+
+
 	public ArrayList<Product> inventory() {
 		return inventory;
 	}
@@ -48,35 +53,13 @@ public class Farm {
 		return soldHistory;
 	}
 
-	public void addNewProduct(Product product) {
-		// TODO: Add farm sells product relationship
-		if (!inventory.contains(product)) {
-			inventory.add(product);
-			//DB.addProductToFarm(username, product.id(), product.quantityLeft());
-		} else {
-			System.out.println(product.name() + " already exists. Use addExistingProduct()\n");
-
-		}
-
-	}
-
-	public void addExistingProduct(Product product, int amount) {
-		// TODO: Edit farm sells product relationship
-		if (inventory.contains(product)) {
-			inventory.get(inventory.indexOf(product)).increaseQuantity(amount);
-			//DB.updateProductQuantity(username, product.id(), amount);
-
-		} else {
-			System.out.println(product.name() + " wasn't found.\n");
-		}
-
-	}
-
 	public void sold(Product product) {
 
 	}
 
 	public void viewSoldHistory() {
+
+		pullSoldHistory();
 
 		for (Product product : soldHistory) {
 			System.out.println(product.toString(true));
@@ -85,7 +68,10 @@ public class Farm {
 		}
 	}
 
-	public void view() {
+	public void viewInventory() {
+
+		pullInventory();
+
 		int index = 0;
 		if (inventory.size() > 0) {
 			System.out.println("Farm: " + username + "\n");

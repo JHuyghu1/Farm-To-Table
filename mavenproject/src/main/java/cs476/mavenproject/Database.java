@@ -23,14 +23,14 @@ public class Database implements AutoCloseable{
 	}
 
 	public Buyer createBuyerNode(final Database DB, final String username, final String password, final String address ){
-		  final String querry = "CREATE (n: Buyer {username: $username, password: $password, address: $address} ) RETURN n.identity";
+		  final String querry = "CREATE (n: Buyer {username: $username, password: $password, address: $address} ) RETURN n";
 		  try(Session session = driver.session())
 		  {
 			 Buyer output = session.writeTransaction(new TransactionWork<Buyer>()
 			 {
 				  public Buyer execute(Transaction tx)
 				  {
-					  Result result = tx.run(querry, parameters("username", username, "password", password, "address", address));
+					  tx.run(querry, parameters("username", username, "password", password, "address", address));
 					  Buyer temp = new Buyer(DB, username, password, address);
 					  tx.commit();
 
@@ -42,7 +42,27 @@ public class Database implements AutoCloseable{
 		  } 
 	  }
 
-	  public Boolean usernameExists(final String username){
+	public Farm createFarmNode(final Database DB, final String username, final String password ){
+		final String querry = "CREATE (n: Farm {username: $username, password: $password} ) RETURN n";
+		try(Session session = driver.session())
+		{
+		   Farm output = session.writeTransaction(new TransactionWork<Farm>()
+		   {
+				public Farm execute(Transaction tx)
+				{
+					tx.run(querry, parameters("username", username, "password", password));
+					Farm temp = new Farm(DB, username, password);
+					tx.commit();
+
+					return temp;
+				}
+			});
+
+		   return output;
+		} 
+	}
+
+	public Boolean usernameExists(final String username){
 		
 		final String querry = "MATCH (n:Buyer) WHERE n.username = $username RETURN count(n) > 0 as n";
 
@@ -60,6 +80,64 @@ public class Database implements AutoCloseable{
 			return output;
 		} 
 	}
+
+	public Farm getFarmFromDataBase(final Database DB, final String username){
+
+		final String querry = "MATCH (n:Farm) WHERE n.username = $username RETURN n.username, n.password";
+
+
+		try(Session session = driver.session())
+		{
+			Farm output = session.readTransaction(new TransactionWork<Farm>()
+			{
+				@Override
+				public Farm execute( Transaction tx )
+				{
+					Result result = tx.run(querry, parameters("username", username));
+					Record record = result.single();
+
+					String username = record.get("n.username").asString();
+					String password = record.get("n.password").asString();
+
+
+					Farm tempFarm = new Farm(DB, username, password);
+
+
+					return tempFarm;
+				}
+			});
+
+
+			return output;
+		} 
+
+	}
+	
+	public ArrayList<Farm> getFramsFromDatabase(final Database DB){
+		final String querry = "MATCH (n:Farm) RETURN n.username";
+
+		try(Session session = driver.session())
+		{
+			ArrayList<Farm> output = session.readTransaction(new TransactionWork<ArrayList<Farm>>()
+			{
+				@Override
+				public ArrayList<Farm> execute( Transaction tx )
+				{
+					Result result = tx.run(querry);
+
+					ArrayList<Farm> tempFarmList = new ArrayList<Farm>();
+
+					while(result.hasNext()){
+						tempFarmList.add(getFarmFromDataBase(DB, result.next().get(0).asString()));
+					}
+					return tempFarmList; 
+				}
+			});
+			return output;
+		} 
+	}
+
+
 
 	// Find buyer using username. Return a new buyer
 	/*
@@ -141,20 +219,7 @@ public class Database implements AutoCloseable{
 	  }
 	  */
 	
-	  public String createFarm(final String username, final String  password) {
-		  final String farmer = "CREATE (farm: Farm {farm.username: $username, farm.password: $password}) RETURN id(farm)";
-		  try(Session session = driver.session()){
-			 String id = session.writeTransaction(new TransactionWork<String>(){
-				  public String execute(Transaction tx){
-					  Result result = tx.run(farmer, parameters("username", username, "password", password));
-					  tx.commit();
-					  return result.single().get("id").asString();
-				  }
-			  });
-			 return id;
-		  }
-	  }
-	  
+	  /*
 	public Farm findFarm(final String id){
 		  final String farmer = "MATCH farm:Farm WHERE farm.id = $id RETURN farm";
 		  try(Session session = driver.session()){
@@ -168,7 +233,7 @@ public class Database implements AutoCloseable{
 			  return user;
 		  } 
 	  }
-	  
+	  */
 	
 	public void addProductToFarm(final String username, final String prodId, final int quantityLeft) {
 		  final String farmer = "MATCH f:Farm {username: $username}"

@@ -20,13 +20,12 @@ public class Login {
 
     public Buyer createNewUser(){
 
-        System.out.println("Create a new account");
-        System.out.println("--------------------\n");
-
-
         String username = "";
         String password = "";
         String address = "";
+
+        System.out.println("Create a new account");
+        System.out.println("--------------------\n");
 
         while(username == ""){
             System.out.print("Enter your new username: ");
@@ -48,5 +47,44 @@ public class Login {
         Buyer tempBuyer = DB.createBuyerNode(DB, username, password, address);
         
         return tempBuyer;
+    }
+
+    public Boolean loginAdmin(){
+
+        System.out.println("Log into admin account | 0 to go back");
+        System.out.println("-------------------------------------\n");
+        
+        System.out.print("Enter Password: ");
+
+        Boolean authenticated = false;
+        String password = "";
+
+        while(password == ""){
+
+            String inputPass = input.nextLine();
+
+            switch(inputPass){
+                case "0":
+                    password = inputPass;
+                    break;
+                
+                //Admin Password
+                case "pass123":
+                    password = inputPass;
+                    authenticated = true;
+                    break;
+
+                default:
+                System.out.print("Wrong password try again: ");
+                break;
+            }
+
+        }
+
+        Utils.clearConsole();
+
+        return authenticated;
+
+
     }
 }

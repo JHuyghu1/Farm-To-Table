@@ -12,18 +12,16 @@ public class Main {
 		//Setup Database 
 		Database DB = new Database("neo4j+s://c612ba03.databases.neo4j.io", "neo4j", "zWYkD4TNiLSyg2kbQpJneBESCwOnNnwVVVL79M32sFw");
 
+		//Start Scanner
 		Scanner input = new Scanner(System.in);
 
-		//Initialize main objects
+		//Initialize Driver
 		Menus Menus = new Menus(DB, input);
-
-	
 
 		Utils.clearConsole();
 
 		Menus.login();
 		
-
 	}
 
 }

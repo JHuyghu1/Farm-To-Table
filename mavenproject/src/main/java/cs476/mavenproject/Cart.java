@@ -26,6 +26,7 @@ public class Cart {
 
 	// TODO: Get order from database
 	public Cart(String id) {
+
 		//Cart temp = DB.findCart(id);
 		//need to find a way to return cart object with ArrayList variable in it, within neo4j
 	}
@@ -51,25 +52,12 @@ public class Cart {
 
 	}
 
-	public ArrayList<Product> contents() {
+	public ArrayList<Product> getProducts() {
 		return products;
 	}
 
 	public void checkout() {
 
-		for (Product product : products) {
-
-			//Updates Product Client Side
-			product.decreaseQuantity(product.quantityWanted());
-
-			//TODO: Update Server Side
-			//DB.addCartToDatabase(buyer, id, products, payloadWeight, cost);
-
-
-			//Reset Products Wated
-			product.resetQuantityWanted();
-
-		}
 
 	}
 
@@ -77,21 +65,16 @@ public class Cart {
 	// Used to remove product from cart
 	public void remove(Product product, int quantity) {
 
-		if (products.contains(product)) {
-
-			Product foundProduct = products.get(products.indexOf(product));
-			foundProduct.decreaseQuantityWanted(quantity);
-
-		} else {
-			System.out.println(product.name() + " is not in your cart!\n");
-		}
 
 	}
 
 	// Used to add procut to cart
 	public void add(Product product, int quantity) {
 
-		if (product.quantityLeft() - (product.quantityWanted() + quantity) >= 0) {
+
+
+		/*
+		if (product.quantity() - (product.quantityWanted() + quantity) >= 0) {
 
 			if ((product.weight() * product.quantityWanted() * quantity)
 					+ this.payloadWeight <= Constants.WEIGHT_LIMIT) {
@@ -113,16 +96,17 @@ public class Cart {
 
 		} else {
 
-			if (product.quantityLeft() == 0)
+			if (product.quantity() == 0)
 				System.out.println("Can't add " + product.name() + ", it's sold out!\n");
 			else
 				System.out.println("Can't add " + product.name() + ", not enough in stock!\n");
 
 		}
+		*/
 
 	}
 
-	public void view() {
+	public void viewProducts() {
 
 		int index = 0;
 
