@@ -66,7 +66,7 @@ public class Cart {
 			//DB.addCartToDatabase(buyer, id, products, payloadWeight, cost);
 
 
-			//Reset Products Wanted
+			//Reset Products Wan
 			product.resetQuantityWanted();
 
 		}

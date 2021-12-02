@@ -77,7 +77,7 @@ public class Database implements AutoCloseable{
 			  Buyer buyer = session.readTransaction(new TransactionWork<Buyer>(){
 				  public Buyer execute(Transaction tx){
 					  Result result = tx.run(customer, parameters("username", username));
-					  Buyer temp = new Buyer(DB, username, result.single().get("password").asString(), esult.single().get("address").asString());
+					  Buyer temp = new Buyer(DB, username, result.single().get("password").asString(), result.single().get("address").asString());
 					  return temp;
 				  }
 			  });
@@ -168,11 +168,12 @@ public class Database implements AutoCloseable{
 		  try(Session session = driver.session()){
 			  Farm f = session.readTransaction(new TransactionWork<Farm>(){
 				  public Farm execute(Transaction tx){
-					  Result result = tx.run(farmer, parameters("id", id));
-					  return result;
+					  Result result = tx.run(farmer, parameters("username", username));
+					  Farm temp = new Farm(result.single().get("id").asString(), username, result.single().get("password").asString());
+					  return temp;
 				  }
 			  });
-			  //Farm user = new Farm(id, f.single().get("username").asString(), f.single().get("password").asString());
+			  
 			  return f;
 		  } 
 	  }
