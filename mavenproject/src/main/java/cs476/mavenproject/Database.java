@@ -154,29 +154,28 @@ public class Database implements AutoCloseable{
 	  }*/
 	  
 	
-	public String createFarm(final String username, final String  password) {
-		  final String farmer = "CREATE (farm: Farm {farm.username: $username, farm.password: $password}) RETURN id(farm)";
+	public Farm createFarm(final Database DB, final String username, final String  password) {
+		  final String query = "CREATE (farm: Farm {farm.username: $username, farm.password: $password}) RETURN farm";
 		  try(Session session = driver.session()){
-			 String id = session.writeTransaction(new TransactionWork<String>(){
-				  public String execute(Transaction tx){
-					  Result result = tx.run(farmer, parameters("username", username, "password", password));
+			 Farm farmer = session.writeTransaction(new TransactionWork<Farm>(){
+				  public Farm execute(Transaction tx){
+					  Result result = tx.run(query, parameters("username", username, "password", password));
 					  tx.commit();
-					  return result.single().get(0).asString();
+					  Farm temp = new Farm(DB, username, password);
+					  return temp;
 				  }
 			  });
-			 return id;
+			 return farmer;
 		  }
 	  }
 	  
-	public Farm findFarm(final String username){
-		  final String farmer1 = "MATCH (farm:Farm) WHERE farm.username = $username RETURN id(farm)";
-		  final String farmer2 = "MATCH (farm:Farm) WHERE farm.username = $username RETURN farm.password";
+	public Farm findFarm(final Database DB, final String username){
+		  final String farmer1 = "MATCH (farm:Farm) WHERE farm.username = $username RETURN farm.password";
 		  try(Session session = driver.session()){
 			  Farm f = session.readTransaction(new TransactionWork<Farm>(){
 				  public Farm execute(Transaction tx){
-					  Result result1 = tx.run(farmer1, parameters("username", username));
-					  Result result2 = tx.run(farmer2, parameters("username", username));
-					  Farm temp = new Farm(result1.single().get(0).asString(), username, result2.single().get(0).asString());
+					  Result result = tx.run(farmer1, parameters("username", username));  
+					  Farm temp = new Farm(DB, username, result.single().get(0).asString());
 					  return temp;
 				  }
 			  });

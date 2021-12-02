@@ -65,7 +65,7 @@ public class Login {
             else{System.out.println("Username incorrect. No account found for that username.");}
         }
 
-        System.out.println("Enter your pasword");
+        System.out.println("Enter your password");
         password = input.nextLine();
 
         String tempPass = DB.verifyBuyerPassword(username);
@@ -94,7 +94,7 @@ public class Login {
                 System.out.println("Username incorrect. No account found for that username.");
             }
         }
-        System.out.println("Enter your pasword");
+        System.out.println("Enter your password");
         password = input.nextLine();
 
         String tempPass = DB.verifyFarmPassword(username);
@@ -103,7 +103,7 @@ public class Login {
             System.out.println("Login successful!");}
         else{ System.out.println("Password Incorrect");}
         
-        Farm tempFarm = DB.findFarm(username);
+        Farm tempFarm = DB.findFarm(DB, username);
         return tempFarm;
     }
 }
