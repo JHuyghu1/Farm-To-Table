@@ -22,21 +22,48 @@ public class Database implements AutoCloseable{
 		driver.close();
 	}
 
-	public String addBuyertoDatabase(final String username, final String pass, final String address ){
-		  final String customer = "CREATE (n: Buyer {n.username: $username, n.password: $pass, n.address: $address} ) RETURN id(n)";
-		  try(Session session = driver.session()){
-			 String id = session.writeTransaction(new TransactionWork<String>(){
-				  public String execute(Transaction tx){
-					  Result result = tx.run(customer, parameters("username", username, "pass", pass, "address", address));
+	public Buyer createBuyerNode(final Database DB, final String username, final String password, final String address ){
+		  final String querry = "CREATE (n: Buyer {username: $username, password: $password, address: $address} ) RETURN n.identity";
+		  try(Session session = driver.session())
+		  {
+			 Buyer output = session.writeTransaction(new TransactionWork<Buyer>()
+			 {
+				  public Buyer execute(Transaction tx)
+				  {
+					  Result result = tx.run(querry, parameters("username", username, "password", password, "address", address));
+					  Buyer temp = new Buyer(DB, username, password, address);
 					  tx.commit();
-					  return result.single().get("id").asString();
+
+					  return temp;
 				  }
 			  });
-			 return id;
+
+			 return output;
 		  } 
 	  }
 
-	public Buyer findBuyer(final String id){
+	  public Boolean usernameExists(final String username){
+		
+		final String querry = "MATCH (n:Buyer) WHERE n.username = $username RETURN count(n) > 0 as n";
+
+		try(Session session = driver.session())
+		{
+			Boolean output = session.readTransaction(new TransactionWork<Boolean>()
+			{
+				@Override
+				public Boolean execute( Transaction tx )
+				{
+					Result result = tx.run(querry, parameters("username", username));
+					return result.single().get(0).asBoolean();
+				}
+			});
+			return output;
+		} 
+	}
+
+	// Find buyer using username. Return a new buyer
+	/*
+	public Buyer findBuyer(final String username){
 		  final String customer = "MATCH n:Buyer WHERE n.id = $id RETURN n";
 		  try(Session session = driver.session()){
 			  Result buyer = session.readTransaction(new TransactionWork<Result>(){
@@ -48,7 +75,7 @@ public class Database implements AutoCloseable{
 			  Buyer user = new Buyer(id, buyer.single().get("username").asString(), buyer.single().get("password").asString(), buyer.single().get("address").asString());
 			  return user;
 		  } 
-	  }
+	  }*/
 	
 	public void followUser(final String usernameA, final String usernameB ) {
 		  final String follower = "MATCH (a: Buyer) , (b:Buyer)  "
@@ -95,12 +122,12 @@ public class Database implements AutoCloseable{
 		  }
 	  }
 	  
-	  /*public Cart findCart(final String id) {
-		  final String query = "MATCH c:Cart WHERE c.id = $id RETURN c, collect(c.products) AS products";
+	/*public Cart findCart(final String id) {
+		  final String query = "MATCH (c:Cart) WHERE id(c) = $id RETURN c, collect(c.products) AS products";
 		  try (Session session = driver.session()){
-			  Result output = session.readTransaction(new TransactionWork<Result>() {
-				  public Result execute(Transaction tx) {
-					  Result result = tx.run(query, parameters("id", id));
+			  Cart output = session.readTransaction(new TransactionWork<Cart>() {
+				  public Cart execute(Transaction tx) {
+					Result result = tx.run(query, parameters("id", id));
 					  return result;
 				  }  
 			  });
@@ -111,9 +138,10 @@ public class Database implements AutoCloseable{
 			  Cart cart = new Cart( temp, id, output.single().get("products").as, output.single().get("weight").asDouble(), output.single().get("cost").asDouble() );
 					 
 		  }
-	  }*/
-	  
-	public String createFarm(final String username, final String  password) {
+	  }
+	  */
+	
+	  public String createFarm(final String username, final String  password) {
 		  final String farmer = "CREATE (farm: Farm {farm.username: $username, farm.password: $password}) RETURN id(farm)";
 		  try(Session session = driver.session()){
 			 String id = session.writeTransaction(new TransactionWork<String>(){

@@ -11,6 +11,9 @@ public class Farm {
 	private ArrayList<Product> soldHistory = new ArrayList<Product>();
 	Database DB;
 
+	//Initaliize empty farm
+	public Farm(){};
+
 	// Constructor from client
 	public Farm(String id, String username, String password) {
 		this.id = id;

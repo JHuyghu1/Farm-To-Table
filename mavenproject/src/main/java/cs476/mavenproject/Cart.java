@@ -4,7 +4,6 @@ import java.util.ArrayList;
 
 public class Cart {
 
-	private String id;
 	private ArrayList<Product> products = new ArrayList<Product>();
 	private Buyer owner;
 	private double payloadWeight = 0;
@@ -17,13 +16,11 @@ public class Cart {
 
 	}
 
-	public Cart(Buyer buyer, String id, ArrayList<Product> products, double payloadWeight, double cost) {
+	public Cart(Buyer buyer, ArrayList<Product> products, double payloadWeight, double cost) {
 		this.owner = buyer;
-		this.id = id;
 		this.cost = cost;
 		this.products = products;
 		this.payloadWeight = payloadWeight;
-		//DB.addCartToDatabase(buyer, id, products, payloadWeight, cost);
 
 	}
 
@@ -36,7 +33,7 @@ public class Cart {
 	// Copy constructor
 	public Cart copy() {
 
-		return new Cart(owner, id, copyProducts(), payloadWeight, cost);
+		return new Cart(owner, copyProducts(), payloadWeight, cost);
 
 	}
 
@@ -61,13 +58,23 @@ public class Cart {
 	public void checkout() {
 
 		for (Product product : products) {
+
+			//Updates Product Client Side
 			product.decreaseQuantity(product.quantityWanted());
+
+			//TODO: Update Server Side
+			//DB.addCartToDatabase(buyer, id, products, payloadWeight, cost);
+
+
+			//Reset Products Wated
 			product.resetQuantityWanted();
 
 		}
 
 	}
 
+
+	// Used to remove product from cart
 	public void remove(Product product, int quantity) {
 
 		if (products.contains(product)) {
@@ -81,6 +88,7 @@ public class Cart {
 
 	}
 
+	// Used to add procut to cart
 	public void add(Product product, int quantity) {
 
 		if (product.quantityLeft() - (product.quantityWanted() + quantity) >= 0) {

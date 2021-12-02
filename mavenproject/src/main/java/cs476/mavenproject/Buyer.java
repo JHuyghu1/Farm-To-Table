@@ -2,6 +2,7 @@ package cs476.mavenproject;
 import java.util.ArrayList;
 
 public class Buyer {
+	
 	private String id;
 	private String username;
 	private String password;
@@ -10,20 +11,35 @@ public class Buyer {
 	private ArrayList<Buyer> following = new ArrayList<Buyer>();
 	Cart cart;
 	Database DB;
-	public Buyer(final String id, final String username, final String password, final String address) {
 
-		this.id = id;
+	//Initalize an empty buyer
+	public Buyer(){
+	}
+
+	public Buyer(Database DB,  final String username, final String password, final String address) {
+
+		this.DB = DB;
 		this.username = username;
 		this.password = password;
 		this.address = address;
 		this.cart = new Cart(this);
-		//this.id = DB.addBuyertoDatabase(username, password, address);
 
 	}
 
-	// TODO: Load buyer from database
-	public Buyer(final String id) {
-		Buyer temp = DB.findBuyer(id);
+	public Buyer(Database DB, final String username) {
+
+		//Initialize database
+		this.DB = DB;
+
+		//TODO: Pull the buyer from the database
+		// Buyer temp = DB.findBuyer(username);
+
+		// Initialize the Buyer
+		/* this.username = temp.username;
+		this.password = temp.password;
+		this.address = temp.address;
+		this.cart = new Cart(this); */
+
 	}
 
 	public String id() {
@@ -63,13 +79,14 @@ public class Buyer {
 	public void follow(Buyer buyer) {
 
 		if (!isFollowing(buyer)) {
+
 			following.add(buyer);
+
 			//DB.followUser(username, buyer.username()); get Buyer a's username 
 			// TODO: Add relationship to database
 
 		} else {
-			// TODO: Pull username from database
-			System.out.printf("Already following " + id);
+			System.out.printf("Already following " + buyer.username);
 		}
 
 	}
