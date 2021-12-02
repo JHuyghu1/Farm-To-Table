@@ -62,7 +62,7 @@ public class Database implements AutoCloseable{
 			String output = session.readTransaction(new TransactionWork<String>(){
 				public String execute(Transaction tx){
 					Result result = tx.run(query, parameters("username", username));
-					return result.single().get("password").asString();
+					return result.single().get(0).asString();
 				}
 			});
 			return output;
@@ -72,12 +72,17 @@ public class Database implements AutoCloseable{
 	// Find buyer using username. Return a new buyer
 	
 	public Buyer findBuyer(final Database DB, final String username){
-		  final String customer = "MATCH n:Buyer WHERE n.username = $username RETURN n";
+		  final String customer1 = "MATCH (n:Buyer) WHERE n.username = $username RETURN n.password";
+		  final String customer2 = "MATCH (n:Buyer) WHERE n.username = $username RETURN n.address";
 		  try(Session session = driver.session()){
 			  Buyer buyer = session.readTransaction(new TransactionWork<Buyer>(){
 				  public Buyer execute(Transaction tx){
-					  Result result = tx.run(customer, parameters("username", username));
-					  Buyer temp = new Buyer(DB, username, result.single().get("password").asString(), result.single().get("address").asString());
+					  Result result1 = tx.run(customer1, parameters("username", username));
+					  Result result2 = tx.run(customer1, parameters("username", username));
+					  //String pass = result.single().get("password").asString();
+					  //String add = result.single().get("address").asString();
+					  //Buyer temp = new Buyer(DB, username, result.single().get("password").asString(), result.single().get("address").asString());
+					  Buyer temp = new Buyer(DB, username, result1.single().get(0).asString(), result2.single().get(0).asString());
 					  return temp;
 				  }
 			  });
@@ -156,7 +161,7 @@ public class Database implements AutoCloseable{
 				  public String execute(Transaction tx){
 					  Result result = tx.run(farmer, parameters("username", username, "password", password));
 					  tx.commit();
-					  return result.single().get("id").asString();
+					  return result.single().get(0).asString();
 				  }
 			  });
 			 return id;
@@ -164,16 +169,17 @@ public class Database implements AutoCloseable{
 	  }
 	  
 	public Farm findFarm(final String username){
-		  final String farmer = "MATCH farm:Farm WHERE farm.username = $username RETURN farm";
+		  final String farmer1 = "MATCH (farm:Farm) WHERE farm.username = $username RETURN id(farm)";
+		  final String farmer2 = "MATCH (farm:Farm) WHERE farm.username = $username RETURN farm.password";
 		  try(Session session = driver.session()){
 			  Farm f = session.readTransaction(new TransactionWork<Farm>(){
 				  public Farm execute(Transaction tx){
-					  Result result = tx.run(farmer, parameters("username", username));
-					  Farm temp = new Farm(result.single().get("id").asString(), username, result.single().get("password").asString());
+					  Result result1 = tx.run(farmer1, parameters("username", username));
+					  Result result2 = tx.run(farmer2, parameters("username", username));
+					  Farm temp = new Farm(result1.single().get(0).asString(), username, result2.single().get(0).asString());
 					  return temp;
 				  }
 			  });
-			  
 			  return f;
 		  } 
 	  }
@@ -185,7 +191,7 @@ public class Database implements AutoCloseable{
 			String password = session.readTransaction(new TransactionWork<String>(){
 				public String execute(Transaction tx){
 					Result result = tx.run(query, parameters("username", username));
-					return result.single().get("password").asString();
+					return result.single().get(0).asString();
 				}
 			});
 			return password;
@@ -194,7 +200,7 @@ public class Database implements AutoCloseable{
 	}
 
 	public Boolean farmUsernameExists(final String username){
-		final String querry = "MATCH (f:Farm) WHERE m.username = $username RETURN count(m) > 0 as m";
+		final String querry = "MATCH (f:Farm) WHERE f.username = $username RETURN count(f) > 0 as f";
 		try(Session session = driver.session()){
 			Boolean output = session.readTransaction(new TransactionWork<Boolean>(){
 				@Override

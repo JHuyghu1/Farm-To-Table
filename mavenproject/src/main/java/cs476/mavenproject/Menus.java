@@ -34,9 +34,17 @@ public class Menus {
 
         switch(selection){
             case "1":
+            Utils.clearConsole();
+            mainBuyer = Login.loginBuyer(DB);
+            Utils.clearConsole();
+            buyerMain();
             break;
 
             case "2":
+            Utils.clearConsole();
+            mainFarm = Login.loginFarm(DB);
+            Utils.clearConsole();
+            buyerMain();
             break;
             
             case "3":
@@ -169,6 +177,10 @@ public class Menus {
 
         }
         
+    }
+
+    public void farmMain(){
+        System.out.println("in farmMain()");
     }
 
 }

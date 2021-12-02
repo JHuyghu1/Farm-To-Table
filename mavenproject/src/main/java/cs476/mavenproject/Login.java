@@ -57,21 +57,24 @@ public class Login {
         while(username == ""){
             System.out.println("Enter your username");
             String tempName = input.nextLine();
+            //username = tempName;
+            //String empty = "";
 
-            if(DB.farmUsernameExists(tempName)){
-                username = tempName;
-                continue;
-            }
-
-            System.out.println("Enter your pasword");
-            password = input.nextLine();
-
-            String tempPass = DB.verifyBuyerPassword(tempName);
-
-            if(password == tempPass){
-                System.out.println("Login successful!");}
-            else{ System.out.println("Password Incorrect");}
+            if(DB.buyerUsernameExists(tempName)){
+                username = tempName;}
+            else{System.out.println("Username incorrect. No account found for that username.");}
         }
+
+        System.out.println("Enter your pasword");
+        password = input.nextLine();
+
+        String tempPass = DB.verifyBuyerPassword(username);
+        System.out.println("correct password:" + tempPass);
+
+        if(password.equals(tempPass)){
+            System.out.println("Login successful!");}
+        else{ System.out.println("Password Incorrect");}
+    
         Buyer tempBuyer = DB.findBuyer(DB, username);
         return tempBuyer;
     }
@@ -87,18 +90,19 @@ public class Login {
 
             if(DB.farmUsernameExists(tempName)){
                 username = tempName;
-                continue;
+            }else{
+                System.out.println("Username incorrect. No account found for that username.");
             }
-
-            System.out.println("Enter your pasword");
-            password = input.nextLine();
-
-            String tempPass = DB.verifyFarmPassword(tempName);
-
-            if(password == tempPass){
-                System.out.println("Login successful!");}
-            else{ System.out.println("Password Incorrect");}
         }
+        System.out.println("Enter your pasword");
+        password = input.nextLine();
+
+        String tempPass = DB.verifyFarmPassword(username);
+
+        if(password.equals(tempPass)){
+            System.out.println("Login successful!");}
+        else{ System.out.println("Password Incorrect");}
+        
         Farm tempFarm = DB.findFarm(username);
         return tempFarm;
     }
