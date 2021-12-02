@@ -6,6 +6,8 @@ import java.util.HashMap;
 
 import org.neo4j.driver.*;
 
+import cs476.mavenproject.Categories.Category;
+
 import static org.neo4j.driver.Values.parameters;
 
 public class Database implements AutoCloseable{
