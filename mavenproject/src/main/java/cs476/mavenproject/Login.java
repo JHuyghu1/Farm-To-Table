@@ -31,7 +31,7 @@ public class Login {
             System.out.println("Enter your new username");
             String tempName = input.nextLine();
 
-            if(!DB.usernameExists(tempName)){
+            if(!DB.buyerUsernameExists(tempName)){
                 username = tempName;
             } else {
                 System.out.println("That username is already taken!\n");
@@ -47,5 +47,59 @@ public class Login {
         Buyer tempBuyer = DB.createBuyerNode(DB, username, password, address);
         
         return tempBuyer;
+    }
+
+    public Buyer loginBuyer(Database DB){
+        System.out.println("Login into your account \n");
+        String username = "";
+        String password = "";
+
+        while(username == ""){
+            System.out.println("Enter your username");
+            String tempName = input.nextLine();
+
+            if(DB.farmUsernameExists(tempName)){
+                username = tempName;
+                continue;
+            }
+
+            System.out.println("Enter your pasword");
+            password = input.nextLine();
+
+            String tempPass = DB.verifyBuyerPassword(tempName);
+
+            if(password == tempPass){
+                System.out.println("Login successful!");}
+            else{ System.out.println("Password Incorrect");}
+        }
+        Buyer tempBuyer = DB.findBuyer(DB, username);
+        return tempBuyer;
+    }
+
+    public Farm loginFarm(Database DB){
+        System.out.println("Login into your account \n");
+        String username = "";
+        String password = "";
+
+        while(username == ""){
+            System.out.println("Enter your username");
+            String tempName = input.nextLine();
+
+            if(DB.farmUsernameExists(tempName)){
+                username = tempName;
+                continue;
+            }
+
+            System.out.println("Enter your pasword");
+            password = input.nextLine();
+
+            String tempPass = DB.verifyFarmPassword(tempName);
+
+            if(password == tempPass){
+                System.out.println("Login successful!");}
+            else{ System.out.println("Password Incorrect");}
+        }
+        Farm tempFarm = DB.findFarm(username);
+        return tempFarm;
     }
 }

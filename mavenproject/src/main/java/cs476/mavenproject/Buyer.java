@@ -32,7 +32,7 @@ public class Buyer {
 		this.DB = DB;
 
 		//TODO: Pull the buyer from the database
-		// Buyer temp = DB.findBuyer(username);
+		// Buyer temp = DB.findBuyer(DB, username);
 
 		// Initialize the Buyer
 		/* this.username = temp.username;
@@ -83,7 +83,7 @@ public class Buyer {
 			following.add(buyer);
 
 			//DB.followUser(username, buyer.username()); get Buyer a's username 
-			// TODO: Add relationship to database
+			
 
 		} else {
 			System.out.printf("Already following " + buyer.username);
@@ -96,7 +96,7 @@ public class Buyer {
 		if (isFollowing(buyer)) {
 			following.remove(buyer);
 			//DB.unfollowUser(username, buyer.username());
-			// TODO: Remove relationship from database
+		
 
 		} else {
 			// TODO: Pull username from database

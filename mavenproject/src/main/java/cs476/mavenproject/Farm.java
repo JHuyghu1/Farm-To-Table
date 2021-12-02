@@ -49,7 +49,6 @@ public class Farm {
 	}
 
 	public void addNewProduct(Product product) {
-		// TODO: Add farm sells product relationship
 		if (!inventory.contains(product)) {
 			inventory.add(product);
 			//DB.addProductToFarm(username, product.id(), product.quantityLeft());
@@ -61,7 +60,6 @@ public class Farm {
 	}
 
 	public void addExistingProduct(Product product, int amount) {
-		// TODO: Edit farm sells product relationship
 		if (inventory.contains(product)) {
 			inventory.get(inventory.indexOf(product)).increaseQuantity(amount);
 			//DB.updateProductQuantity(username, product.id(), amount);
