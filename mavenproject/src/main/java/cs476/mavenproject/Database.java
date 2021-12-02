@@ -120,13 +120,13 @@ public class Database implements AutoCloseable{
 	  }
 	
 	public void addCartToDatabase(final Buyer buyer, final String cart_id, final ArrayList<Product> products, final double weight, final double cost) {
-		  final String cart = "MATCH (n:Buyer) WHERE n.username = $username, n.password = $password, n.address = $address, AND n.id = $id"
+		  final String cart = "MATCH (n:Buyer) WHERE n.username = $username, n.password = $password, AND n.address = $address"
 		  					+ "CREATE (c:CART {owner: n, cartID: $c_id, weight: $weight, cost: $cost, products:[$products]}) "
 		  					+ "CREATE (n)-[r:PURCHASED]->(c)";
 		  try(Session session = driver.session()){
 			  String x = session.writeTransaction(new TransactionWork<String>() {
 				  public String execute(Transaction tx) {
-					  Result result = tx.run(cart, parameters("username", buyer.username(), "password", buyer.password(), "address", buyer.address(), "id", buyer.id(),
+					  Result result = tx.run(cart, parameters("username", buyer.username(), "password", buyer.password(), "address", buyer.address(), 
 							  "c_id", cart_id,  "weight", weight, "cost", cost, "products", products));
 					  tx.commit();
 					  return result.single().get("id").asString();
@@ -135,7 +135,11 @@ public class Database implements AutoCloseable{
 		  }
 	  }
 	  
-	/*public Cart findCart(final String id) {
+	/*public void addProductToCart(final Cart cart, final String product_id){
+		final String query = "MATCH (c:Cart) WHERE c.id = $id"
+							
+	}
+	public Cart findCart(final String id) {
 		  final String query = "MATCH (c:Cart) WHERE id(c) = $id RETURN c, collect(c.products) AS products";
 		  try (Session session = driver.session()){
 			  Cart output = session.readTransaction(new TransactionWork<Cart>() {
