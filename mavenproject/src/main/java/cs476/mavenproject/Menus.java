@@ -44,7 +44,7 @@ public class Menus {
 
             case "4":
             Utils.clearConsole();
-            mainBuyer = Login.createNewUser(DB);
+            mainBuyer = Login.createNewUser();
             Utils.clearConsole();
             buyerMain();
             break;
@@ -86,6 +86,8 @@ public class Menus {
             break;
 
             case "4":
+            Utils.clearConsole();
+            buyerCart();
             break;
 
             case "5":
@@ -144,11 +146,22 @@ public class Menus {
     }
 
     public void buyerCart() {
+        
         String selection;
 
-        System.out.println("1 - Checkout");
-        System.out.print("| 2 - Edit Item");
-        System.out.println("| 3 - Back");
+        System.out.println("Cart for: " + mainBuyer.username());
+        System.out.print("----------");
+        for(int i = 0; i < mainBuyer.username().length(); i++){
+            System.out.print('-');
+        }
+
+
+        System.out.print("\n1 - Checkout");
+        System.out.print(" | 2 - Edit Item");
+        System.out.println(" | 3 - Back");
+        System.out.println("---------------------------------------");
+
+        mainBuyer.cart.view();
 
         selection = input.nextLine();
 
@@ -160,6 +173,8 @@ public class Menus {
             break;
             
             case "3":
+            Utils.clearConsole();
+            buyerMain();
             break;
 
             default:

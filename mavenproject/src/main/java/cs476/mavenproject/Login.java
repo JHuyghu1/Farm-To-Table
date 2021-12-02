@@ -18,9 +18,10 @@ public class Login {
 
     }
 
-    public Buyer createNewUser(Database DB){
+    public Buyer createNewUser(){
 
-        System.out.println("Create a new account \n");
+        System.out.println("Create a new account");
+        System.out.println("--------------------\n");
 
 
         String username = "";
@@ -28,7 +29,7 @@ public class Login {
         String address = "";
 
         while(username == ""){
-            System.out.println("Enter your new username");
+            System.out.print("Enter your new username: ");
             String tempName = input.nextLine();
 
             if(!DB.usernameExists(tempName)){
@@ -38,10 +39,10 @@ public class Login {
             }
         }
 
-        System.out.println("Enter your pasword");
+        System.out.print("Enter your pasword: ");
         password = input.nextLine();
 
-        System.out.println("Enter your address");
+        System.out.print("Enter your address: ");
         address = input.nextLine();
 
         Buyer tempBuyer = DB.createBuyerNode(DB, username, password, address);
