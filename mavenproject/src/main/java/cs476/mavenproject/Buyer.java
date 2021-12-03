@@ -108,22 +108,10 @@ public class Buyer {
 	public void viewPurchaseHistory() {
 
 		for (Cart cart : purchaseHistory) {
-			cart.viewProducts();
+			cart.viewCart();
 			System.out.println();
 
 		}
 	}
-
-	public void checkout() {
-
-		if (cart.getProducts().size() > 0) {
-			this.purchaseHistory().add(cart.copy());
-			cart.checkout();
-			this.cart = new Cart(this);
-
-		} else {
-			System.out.println("Your cart is empty! \n");
-
-		}
-	}
+	
 }

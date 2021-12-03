@@ -1,13 +1,27 @@
 package cs476.mavenproject;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Map.Entry;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
 
 
 public class Cart {
 
-	private ArrayList<Product> products = new ArrayList<Product>();
+	public static enum CartStatus{
+		BUILD,
+		ORDERED,
+        SHIPPED,
+        DELIVERED
+	}
+
+	private Map<Integer, Entry<Product,Integer>> products = new HashMap<Integer, Entry<Product,Integer>>();
 	private Buyer owner;
 	private double payloadWeight = 0;
 	private double cost = 0;
+	private CartStatus status = CartStatus.BUILD;
 	Database DB;
 
 
@@ -16,7 +30,7 @@ public class Cart {
 
 	}
 
-	public Cart(Buyer buyer, ArrayList<Product> products, double payloadWeight, double cost) {
+	public Cart(Buyer buyer, Map<Integer, Entry<Product,Integer>> products, double payloadWeight, double cost) {
 		this.owner = buyer;
 		this.cost = cost;
 		this.products = products;
@@ -31,28 +45,20 @@ public class Cart {
 		//need to find a way to return cart object with ArrayList variable in it, within neo4j
 	}
 
-	// Copy constructor
-	public Cart copy() {
+	public int maxQuantity(Product p){
+		int maxQuantity = 0;
+		Double productWeight = p.weight();
+		Double capcityLeft = Constants.WEIGHT_LIMIT - payloadWeight;
 
-		return new Cart(owner, copyProducts(), payloadWeight, cost);
-
-	}
-
-	public ArrayList<Product> copyProducts() {
-
-		ArrayList<Product> copiedProducts = new ArrayList<Product>();
-
-		for (Product product : products) {
-			copiedProducts.add(product.copy());
-
+		for(int i = 0; (maxQuantity*productWeight) < capcityLeft;  i++){
+			maxQuantity = i;
 		}
-
-		return copiedProducts;
+		return maxQuantity;
 
 	}
 
-	public ArrayList<Product> getProducts() {
-		return products;
+	public Double currentWeight() {
+		return payloadWeight;
 	}
 
 	public void checkout() {
@@ -60,52 +66,87 @@ public class Cart {
 
 	}
 
+	public int contains(int productId){
+		//If the product isn't in the cart
+		if(!products.containsKey(productId)){
+			return 0;
+		} else {
 
+			//Get current cart item
+			Entry<Product, Integer> cartItem = products.get(productId);
+
+			//return total number of {product} in cart
+			return cartItem.getValue();
+		}
+		
+
+
+	}
+	
 	// Used to remove product from cart
 	public void remove(Product product, int quantity) {
+		
+		int productId = product.identity();
 
+		//Get current cart item
+		Entry<Product, Integer> cartItem = products.get(productId);
+
+		//Completely rmove product
+		if(cartItem.getValue() == quantity){
+			products.remove(productId);
+		} else {
+			//Overwrite cart item with difference in quantity
+			products.put(productId, new SimpleEntry<Product, Integer>(product, cartItem.getValue() - quantity));
+		}
+
+		updatePayloadWeight();
 
 	}
 
 	// Used to add procut to cart
 	public void add(Product product, int quantity) {
 
+		int productId = product.identity();
 
-
-		/*
-		if (product.quantity() - (product.quantityWanted() + quantity) >= 0) {
-
-			if ((product.weight() * product.quantityWanted() * quantity)
-					+ this.payloadWeight <= Constants.WEIGHT_LIMIT) {
-
-				product.increaseQuantityWanted(quantity);
-
-				payloadWeight += product.weight() * quantity;
-				cost += product.price();
-
-				// Don't add product if it's already in the cart
-				if (!products.contains(product)) {
-					products.add(product);
-				}
-
-			} else {
-				System.out.println("Could't add " + product.weight() + " grams of " + product.name()
-						+ " max cart weight is " + Constants.WEIGHT_LIMIT + " grams \n");
-			}
+		//If the product isn't in the cart
+		if(!products.containsKey(productId)){
+			products.put(productId, new SimpleEntry<Product, Integer>(product, quantity));
 
 		} else {
+			//Get current cart item
+			Entry<Product, Integer> cartItem = products.get(productId);
 
-			if (product.quantity() == 0)
-				System.out.println("Can't add " + product.name() + ", it's sold out!\n");
-			else
-				System.out.println("Can't add " + product.name() + ", not enough in stock!\n");
+			//Overwrite cart item with summed quantity
+			products.put(productId, new SimpleEntry<Product, Integer>(product, quantity + cartItem.getValue()));
 
 		}
-		*/
 
+		updatePayloadWeight();
 	}
 
-	public void viewProducts() {
+	//Go through cart and update the payload weight
+	private void updatePayloadWeight(){
+
+		final double [] weightSum = {0};
+
+		products.forEach((k,v) -> {
+			weightSum[0] = weightSum[0] + (v.getKey().weight()*v.getValue());
+		} );
+
+		payloadWeight = weightSum[0];
+	}
+
+	public void viewCart() {
+
+		if(products.size() == 0){
+			System.out.println("You have no products in your cart!");
+
+		} else {
+			products.forEach((k,v) -> {
+				System.out.println(v.getKey().toString(true, v.getValue()));
+			} );
+	
+		}
 
 
 		/*
@@ -126,4 +167,12 @@ public class Cart {
 		*/
 	}
 
+	public void printProduct(int productId){
+		if(products.containsKey(productId)){
+			Entry<Product, Integer> cartItem = products.get(productId);
+			System.out.println(cartItem.getKey().toString(true, cartItem.getValue()));
+		} else {
+			System.out.println("Product isn't in cart!");
+		}
+	}
 }

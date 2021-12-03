@@ -15,12 +15,12 @@ public class Main {
 		//Start Scanner
 		Scanner input = new Scanner(System.in);
 
-		//Initialize Driver
-		Menus Menus = new Menus(DB, input);
+		//Initialize App Driver
+		AppDriver driver = new AppDriver(DB, input);
 
 		Utils.clearConsole();
 
-		Menus.login();
+		driver.login();
 		
 	}
 

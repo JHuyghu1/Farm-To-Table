@@ -62,11 +62,6 @@ public class Farm {
 
 		pullSoldHistory();
 
-		for (Product product : soldHistory) {
-			System.out.println(product.toString(true));
-			System.out.println();
-
-		}
 	}
 
 	public void viewInventory(Boolean withFarmName) {
@@ -80,7 +75,7 @@ public class Farm {
 				System.out.println("-----" );
 			}
 			for (Product product : inventory) {
-				System.out.println(product.toString(false));
+				System.out.println(product.toString(false, 0));
 				System.out.println("-");
 
 			}

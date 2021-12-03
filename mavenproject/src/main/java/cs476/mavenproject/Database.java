@@ -162,7 +162,6 @@ public class Database implements AutoCloseable{
 					 
 		  }
 	  }*/
-	  
 	
 	public Farm createFarmNode(final Database DB, final Categories categories, final String username, final String  password) {
 		  final String query = "CREATE (f: Farm {username: $username, password: $password}) RETURN f";
@@ -288,7 +287,7 @@ public class Database implements AutoCloseable{
 				public Product execute(Transaction tx) {
 					Result result = tx.run(query, parameters("name", name, "category", category.name(), "subCategory", subCategory.name(), "price", price, "quantity", quantity));
 					Record record = result.single();
-					String tempId = record.get(0).toString();
+					int tempId = record.get(0).asInt();
 
 					tx.commit();
 					
@@ -334,7 +333,7 @@ public class Database implements AutoCloseable{
 					Category tempCategory = categories.getCategoryByName(record.get("p.category").asString());
 					SubCategory tempSubCategory = tempCategory.get(record.get("p.subCategory").asString()); 
 
-					Product tempProduct = new Product(DB, record.get("id").toString(), record.get("p.name").asString(), tempCategory, tempSubCategory, record.get("p.price").asDouble(), record.get("p.quantity").asInt());
+					Product tempProduct = new Product(DB, record.get("id").asInt(), record.get("p.name").asString(), tempCategory, tempSubCategory, record.get("p.price").asDouble(), record.get("p.quantity").asInt());
 					
 					return tempProduct;
 				}
@@ -342,6 +341,28 @@ public class Database implements AutoCloseable{
 
 			return output;
 		}
+	}
+
+	public ArrayList<Product> customProductSearch(final Database DB, final Categories categories, final String username, final SubCategory subCategory){
+		final String query = "MATCH (n:Farm)-[:SELLS]-(p:Product) WHERE n.username = $username AND p.subCategory = $subCategory RETURN id(p)";
+		try(Session session = driver.session()){
+			ArrayList<Product> farms = session.readTransaction(new TransactionWork<ArrayList<Product>>(){
+				public ArrayList<Product> execute(Transaction tx){
+
+					ArrayList<Product> tempInventory = new ArrayList<Product>();
+					Result result = tx.run(query, parameters("subCategory", subCategory.name(), "username", username));
+
+					while(result.hasNext()){
+						tempInventory.add(findProduct(categories, DB, result.next().get(0).asInt()));
+					}
+
+					return tempInventory;
+
+				}
+			});
+			return farms;
+		} 
+
 	}
 
 	public Buyer recommendNewFollowers(final Database DB, final String username){

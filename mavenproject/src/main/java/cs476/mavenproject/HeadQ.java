@@ -202,7 +202,7 @@ public class HeadQ {
 		Product newProduct = DB.createProductNode(DB, name, category, subCategory, price, quantity);
 		
 		//Connect the product to the farm
-		int idAsInt = Integer.parseInt(newProduct.identity());
+		int idAsInt = newProduct.identity();
 		DB.addProductToFarm(farm.name(), idAsInt);
 
 		Utils.clearConsole();
@@ -263,7 +263,7 @@ public class HeadQ {
 
 
 
-	public ArrayList<Farm> inventory() {
+	public ArrayList<Farm> farms() {
 		return farms;
 	}
 
