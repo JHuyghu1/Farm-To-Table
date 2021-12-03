@@ -74,17 +74,14 @@ public class Database implements AutoCloseable{
 	// Find buyer using username. Return a new buyer
 	
 	public Buyer findBuyer(final Database DB, final String username){
-		  final String customer1 = "MATCH (n:Buyer) WHERE n.username = $username RETURN n.password";
-		  final String customer2 = "MATCH (n:Buyer) WHERE n.username = $username RETURN n.address";
+		  final String querry = "MATCH (n:Buyer) WHERE n.username = $username RETURN n.address, n.password";
 		  try(Session session = driver.session()){
 			  Buyer buyer = session.readTransaction(new TransactionWork<Buyer>(){
 				  public Buyer execute(Transaction tx){
-					  Result result1 = tx.run(customer1, parameters("username", username));
-					  Result result2 = tx.run(customer1, parameters("username", username));
-					  //String pass = result.single().get("password").asString();
-					  //String add = result.single().get("address").asString();
-					  //Buyer temp = new Buyer(DB, username, result.single().get("password").asString(), result.single().get("address").asString());
-					  Buyer temp = new Buyer(DB, username, result1.single().get(0).asString(), result2.single().get(0).asString());
+					  Result result = tx.run(querry, parameters("username", username));
+					  Record record = result.single();
+
+					  Buyer temp = new Buyer(DB, username, record.get("n.address").asString(), record.get("n.password").asString());
 					  return temp;
 				  }
 			  });
@@ -160,14 +157,14 @@ public class Database implements AutoCloseable{
 	  }*/
 	  
 	
-	public Farm createFarm(final Database DB, final String username, final String  password) {
-		  final String query = "CREATE (farm: Farm {farm.username: $username, farm.password: $password}) RETURN farm";
+	public Farm createFarmNode(final Database DB, final Categories categories, final String username, final String  password) {
+		  final String query = "CREATE (f: Farm {username: $username, password: $password}) RETURN f";
 		  try(Session session = driver.session()){
 			 Farm farmer = session.writeTransaction(new TransactionWork<Farm>(){
 				  public Farm execute(Transaction tx){
-					  Result result = tx.run(query, parameters("username", username, "password", password));
+					  tx.run(query, parameters("username", username, "password", password));
 					  tx.commit();
-					  Farm temp = new Farm(DB, username, password);
+					  Farm temp = new Farm(DB, categories, username, password);
 					  return temp;
 				  }
 			  });
@@ -175,13 +172,13 @@ public class Database implements AutoCloseable{
 		  }
 	  }
 	  
-	public Farm findFarm(final Database DB, final String username){
+	public Farm findFarm(final Database DB, final Categories categories, final String username){
 		  final String farmer1 = "MATCH (farm:Farm) WHERE farm.username = $username RETURN farm.password";
 		  try(Session session = driver.session()){
 			  Farm f = session.readTransaction(new TransactionWork<Farm>(){
 				  public Farm execute(Transaction tx){
 					  Result result = tx.run(farmer1, parameters("username", username));  
-					  Farm temp = new Farm(DB, username, result.single().get(0).asString());
+					  Farm temp = new Farm(DB, categories, username, result.single().get(0).asString());
 					  return temp;
 				  }
 			  });
@@ -189,7 +186,28 @@ public class Database implements AutoCloseable{
 		  } 
 	  }
 	  
-	
+	public ArrayList<Farm> getAllFrams(final Database DB, final Categories categories){
+		final String querry = "MATCH (n:Farm) RETURN n.username";
+		try(Session session = driver.session()){
+			ArrayList<Farm> farms = session.readTransaction(new TransactionWork<ArrayList<Farm>>(){
+				public ArrayList<Farm> execute(Transaction tx){
+
+					ArrayList<Farm> tempFarms = new ArrayList<Farm>();
+					Result result = tx.run(querry);
+
+					while(result.hasNext()){
+						tempFarms.add(findFarm(DB, categories, result.next().get("n.username").asString()));
+					}
+
+					return tempFarms;
+
+				}
+			});
+			return farms;
+		} 
+
+	}
+
 	public String verifyFarmPassword(final String username){
 		final String query = "MATCH (m:Farm) WHERE m.username = $username RETURN m.password";
 		try(Session session = driver.session()){
@@ -217,45 +235,53 @@ public class Database implements AutoCloseable{
 			return output;
 		} 
 	}
-	public void addProductToFarm(final String username, final String prodId, final int quantityLeft) {
-		  final String farmer = "MATCH f:Farm {username: $username}"
-				+  "MATCH p:Product WHERE p.id = $prod_id"
-		  		+ "CREATE (f)-[r:SELLS {quantityLeft: $quantityLeft}]->(p)";
+	
+	public void addProductToFarm(final String username, final int prodId) {
+		  final String farmer = "MATCH (f:Farm), (p:Product) " +
+		    					"WHERE f.username = $username AND id(p) = $prodId "+
+		  		          		"CREATE (f)-[:SELLS]->(p) " +
+								"RETURN f,p";
 		  try(Session session = driver.session()){
-			  String temp = session.writeTransaction(new TransactionWork<String>() {
-				  public String execute(Transaction tc) {
-					  Result result = tc.run(farmer, parameters("username", username, "prod_id", prodId, "quantityLeft", quantityLeft));
-					  tc.commit();
-					  return result.single().get("id").asString();
+			  session.writeTransaction(new TransactionWork<String>() {
+				  public String execute(Transaction tx) {
+					  tx.run(farmer, parameters("username", username, "prodId", prodId));
+					  tx.commit();
+
+					  return null;
 				  }
 			  });
 		  } 		
 	}
 	
-	public void updateProductQuantity(final String username, final String id, final int amount) {
-		final String product = "MATCH (f:Farm {username: $username})-[r:SELLS]->(prod:Product {prod.id: $id})"
-				+ "SET r.quantityLeft = $amount"
-				+ "RETURN r.quantityLeft";
+	public void restockProduct(final int id, final int amount) {
+		final String product = "MATCH (p:Product) WHERE id(p) = $id "
+				+ "SET p.quantity = $amount "
+				+ "RETURN p";
 		try(Session session = driver.session()){
-			String temp = session.writeTransaction(new TransactionWork<String>() {
+			session.writeTransaction(new TransactionWork<String>() {
 				public String execute(Transaction tx) {
-					Result result = tx.run(product, parameters("username", username, "id", id, "amount", amount));
+					tx.run(product, parameters("id", id, "amount", amount));
 					tx.commit();
-					return result.single().get("quantityLeft").asString();
+
+					return null;
 				}
 			});
 		}	
 	}
 
 	public Product createProductNode(final Database DB, final String name, final Category category, final SubCategory subCategory, final double price, final int quantity) {
-		final String query = "CREATE p:Product {p.name: $name, p.category: $category, p.subCategory: $subCat, p.price: $price, p.quantity: $quantity"
-							+ "RETURN id(p)";
+		final String query = "CREATE (p:Product {name: $name, category: $category, subCategory: $subCategory, price: $price, quantity: $quantity})"
+							+ " RETURN id(p)";
 		try(Session session = driver.session()){
 			Product product = session.writeTransaction(new TransactionWork<Product>() {
 				public Product execute(Transaction tx) {
-					Result result = tx.run(query, parameters("name", name, "category", category.name(), "subCat", subCategory.name(), "price", price, "quantity", quantity));
+					Result result = tx.run(query, parameters("name", name, "category", category.name(), "subCategory", subCategory.name(), "price", price, "quantity", quantity));
+					Record record = result.single();
+					String tempId = record.get(0).toString();
+
 					tx.commit();
-					Product temp = new Product(DB, result.single().get(0).asString(), name, category, subCategory, price, quantity);
+					
+					Product temp = new Product(DB, tempId, name, category, subCategory, price, quantity);
 					return temp;
 				}
 			});
@@ -263,20 +289,49 @@ public class Database implements AutoCloseable{
 		}
 	}
 
-	/*public Product findProduct(final String id) {
-		final String prod = "MATCH (p:Product) WHERE p.id = $id RETURN p, p.Farm, p.category, p.subcategory";
+	public ArrayList<Product> getFarmInventory(final Database DB, final Categories categories, final String username){
+		final String querry = "MATCH (n:Farm)-[:SELLS]-(p:Product) WHERE n.username = $username RETURN id(p)";
 		try(Session session = driver.session()){
-			Product temp = session.readTransaction(new TransactionWork<Product>() {
-				public Product execute(Transaction tx) {
-					Result result = tx.run(prod, parameters("id", id));
-					return result;
+			ArrayList<Product> farms = session.readTransaction(new TransactionWork<ArrayList<Product>>(){
+				public ArrayList<Product> execute(Transaction tx){
+
+					ArrayList<Product> tempInventory = new ArrayList<Product>();
+					Result result = tx.run(querry, parameters("username", username));
+
+					while(result.hasNext()){
+						tempInventory.add(findProduct(categories, DB, result.next().get(0).asInt()));
+					}
+
+					return tempInventory;
+
 				}
 			});
-			//need a new product constructor to take Farm, Category, and SubCategory as nonObject variables
-			Product product = new Product(id, temp.single().get("farm").asObject(), temp.single().get("name").asString(), temp.single().get("category").asObject(),temp.single().get("subCategory").asObject(), temp.single().get("price").asDouble(), temp.single().get("quantityLeft").asInt(), temp.single().get("quantityWanted").asInt() );
-		}
-	}*/
+			return farms;
+		} 
 
+	}
+	
+	public Product findProduct(final Categories categories, final Database DB, final int id) {
+		final String querry = "MATCH (p:Product) WHERE id(p) = $id RETURN id(p) as id, p.name, p.category, p.subCategory, p.price, p.quantity";
+		
+		try(Session session = driver.session()){
+			Product output = session.readTransaction(new TransactionWork<Product>() {
+				public Product execute(Transaction tx) {
+					Result result = tx.run(querry, parameters("id", id));
+					Record record = result.single();
+
+					Category tempCategory = categories.getCategoryByName(record.get("p.category").asString());
+					SubCategory tempSubCategory = tempCategory.get(record.get("p.subCategory").asString()); 
+
+					Product tempProduct = new Product(DB, record.get("id").toString(), record.get("p.name").asString(), tempCategory, tempSubCategory, record.get("p.price").asDouble(), record.get("p.quantity").asInt());
+					
+					return tempProduct;
+				}
+			});
+
+			return output;
+		}
+	}
 
 	public Buyer recommendNewFollowers(final Database DB, final String username){
 		final String query = "MATCH (n:Buyer {n.username: $username})->[:FOLLOWS]->(m)-[:FOLLOWS]->(s)"

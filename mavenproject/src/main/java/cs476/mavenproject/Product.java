@@ -35,6 +35,11 @@ public class Product {
 
 	}
 
+	public String identity() {
+		return identity;
+	}
+
+
 	public Category category() {
 		return category;
 	}
@@ -81,10 +86,10 @@ public class Product {
 
 		return cartView
 
-				? name + " | " + category.name() + " - " + subCategory.name() + " | Price: $" + price
+				? "|~ ID: " + identity + " | " + name + " | " + category.name() + " - " + subCategory.name() + " | Price: $" + price
 						+ " | Serving Size: " + weight + " grams | In Cart: "
 
-				: name + " | " + category.name() + " - " + subCategory.name() + " | Price: $" + price
+				: "|~ ID: " + identity + " | " +name + " | " + category.name() + " - " + subCategory.name() + " | Price: $" + price
 						+ " | Serving Size: " + weight + " grams | Quiantity Left: " + quantity;
 
 	}

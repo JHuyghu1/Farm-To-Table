@@ -31,7 +31,7 @@ public class Login {
             System.out.print("Enter your new username: ");
             String tempName = input.nextLine();
 
-            if(!DB.usernameExists(tempName)){
+            if(!DB.buyerUsernameExists(tempName)){
                 username = tempName;
             } else {
                 System.out.println("That username is already taken!\n");

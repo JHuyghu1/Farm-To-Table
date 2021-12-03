@@ -1,15 +1,17 @@
 package cs476.mavenproject;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
 
 //import SubCategory;
 
 public class Categories {
 
-	Hashtable<Integer, SubCategory> vegetableTable = new Hashtable<Integer, SubCategory>();
-	Hashtable<Integer, SubCategory> fruitTable = new Hashtable<Integer, SubCategory>();
-	Hashtable<Integer, SubCategory> herbsTable = new Hashtable<Integer, SubCategory>();
+	Map<Integer, SubCategory> vegetableTable = new HashMap<Integer, SubCategory>();
+	Map<Integer, SubCategory> fruitTable = new HashMap<Integer, SubCategory>();
+	Map<Integer, SubCategory> herbsTable = new HashMap<Integer, SubCategory>();
 
-	Category vegetables, fruits, herbs;
+	Category vegetables, fruits, herbs, tempCategory;
 
 	public Categories() {
 
@@ -49,32 +51,58 @@ public class Categories {
 		fruits = new Category(fruitTable, "Fruits");
 		herbs = new Category(herbsTable, "Herbs");
 
-}
-
-
-
-class Category {
-
-	private Hashtable<Integer, SubCategory> tabel = new Hashtable<Integer, SubCategory>();
-	private String name;
-
-	public Category(Hashtable<Integer, SubCategory> tabel, String name) {
-		this.tabel = tabel;
-		this.name = name;
 	}
 
-	public void viewSubCategory(){
-		System.out.println(tabel);
-	}
+	public Category getCategoryByName(String name){
 
-	public String name() {
-		return name;
+		switch(name){
+			case"Vegetables":
+				return vegetables;
+			case"Fruits":
+				return fruits;
+			case"Herbs":
+				return herbs;
+			default:
+				System.out.println("Category: " + name + " doesn't exist!");
+				return null;
+		}
 	}
+	class Category {
 
-	public SubCategory get(int i) {
-		return tabel.get(i);
-	}
+		Map<Integer, SubCategory> table;
+		private String name;
 
-}
+		public Category(Map<Integer, SubCategory> table, String name) {
+			this.table = table;
+			this.name = name;
+		}
+
+		public void viewSubCategories(){
+
+			for(int i = 1; i <= table.size(); i++)
+		   		System.out.println(i + " - " + get(i).name());
+		}
+
+		public String name() {
+			return name;
+		}
+
+		public SubCategory get(int i) {
+			return table.get(i);
+		}
+
+		public SubCategory get(String name) {
+
+			for (Map.Entry<Integer,SubCategory> entry : table.entrySet())
+				if(entry.getValue().name().equals(name))
+					return entry.getValue();
+
+			
+			System.out.println("SubCategory: " + name + " doesn't exist!");
+			return null;
+		}
+
+
+}	
 
 }

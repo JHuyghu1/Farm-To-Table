@@ -8,17 +8,21 @@ public class Farm {
 	private ArrayList<Product> inventory = new ArrayList<Product>();
 	private ArrayList<Product> soldHistory = new ArrayList<Product>();
 	Database DB;
+	Categories categories;
+
 
 	//Initaliize empty farm
 	public Farm(){};
 
 	// Constructor from client
-	public Farm(Database DB, String username, String password) {
+	public Farm(Database DB, Categories categories, String username, String password) {
 		this.DB = DB;
+		this.categories = categories;
 		this.username = username;
 		this.password = password;
+		pullInventory();
 	}
-	
+
 	// Constructor from DB
 	public Farm(String username) {
 		//TODO: Pull farm from db
@@ -38,12 +42,9 @@ public class Farm {
 
 	}
 
-	//TODO: Pull current invortory from db
 	public void pullInventory(){
-	
+		inventory = DB.getFarmInventory(DB, categories, username);
 	}
-
-
 
 	public ArrayList<Product> inventory() {
 		return inventory;
@@ -72,17 +73,17 @@ public class Farm {
 
 		pullInventory();
 
-		int index = 0;
+		
 		if (inventory.size() > 0) {
-			System.out.println("Farm: " + username + "\n");
+			System.out.println("\nFarm: " + username );
+			System.out.println("-----" );
 			for (Product product : inventory) {
-				System.out.println(++index + ". " + product.toString(false) + "\n");
+				System.out.println(product.toString(false));
+				System.out.println("-");
+
 			}
-		} else {
-
-			System.out.println(username + " has no iventory\n");
-
 		}
+
 	}
 
 }
