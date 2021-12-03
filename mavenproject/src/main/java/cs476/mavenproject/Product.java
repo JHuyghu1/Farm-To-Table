@@ -69,18 +69,6 @@ public class Product {
 		quantity += amount;
 	}
 
-	public void decreaseQuantity(int amount) {
-
-		if (quantity - amount >= 0) {
-
-			quantity -= amount;
-
-		} else {
-
-			System.out.println("Can't remove low supply: " + quantity + " left");
-		}
-
-	}
 
 	public String toString(boolean cartView) {
 

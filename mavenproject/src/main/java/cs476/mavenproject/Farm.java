@@ -82,6 +82,7 @@ public class Farm {
 				System.out.println("-");
 
 			}
+			
 		}
 
 	}

@@ -108,6 +108,8 @@ public class Cart {
 
 	public void viewProducts() {
 
+
+		/*
 		int index = 0;
 
 		if (products.size() > 0) {
@@ -122,6 +124,7 @@ public class Cart {
 			System.out.println("Cart is empty, nothing to view.");
 
 		}
+		*/
 	}
 
 }
