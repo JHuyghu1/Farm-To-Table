@@ -57,7 +57,7 @@ public class Menus {
                 Farm farmAuth = Login.loginFarm();
                 if(farmAuth != null){
                     mainFarm = farmAuth;
-                    System.out.println("Logged in");
+                    farmMain();
                 } else {
                     login();
                 }
@@ -220,6 +220,46 @@ public class Menus {
         
     }
 
+    public void farmMain(){
+
+        String selection;
+
+        System.out.println("Farm Menu - " + mainFarm.name());
+        System.out.println("----------");
+        System.out.println("1 - Inventory");
+        System.out.println("2 - Sales");
+        System.out.println("3 - Recommendations");
+        System.out.println("4 - Logout");
+
+        System.out.print("\nYour selection: ");
+        selection = input.nextLine();
+
+        switch(selection){
+            case "1":
+                break;
+
+            case "2":
+                Utils.clearConsole();
+                break;
+
+            case "3":
+                Utils.clearConsole();
+                break;
+            
+            case "4":
+                Utils.clearConsole();
+                login();
+                break;
+
+            default:
+                Utils.clearConsole();
+                System.out.println(selection + INVAL_SEL);
+                farmMain();
+
+        }
+
+    }
+    
     public void adminMain() {
         String selection;
 
