@@ -2,6 +2,9 @@ package cs476.mavenproject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import javax.print.attribute.standard.Sides;
+
 import java.util.HashMap;
 
 import org.neo4j.driver.*;
@@ -25,14 +28,14 @@ public class Database implements AutoCloseable{
 	}
 
 	public Buyer createBuyerNode(final Database DB, final String username, final String password, final String address ){
-		  final String querry = "CREATE (n: Buyer {username: $username, password: $password, address: $address} ) RETURN n.identity";
+		  final String query = "CREATE (n: Buyer {username: $username, password: $password, address: $address} ) RETURN n.identity";
 		  try(Session session = driver.session())
 		  {
 			 Buyer output = session.writeTransaction(new TransactionWork<Buyer>()
 			 {
 				  public Buyer execute(Transaction tx)
 				  {
-					  Result result = tx.run(querry, parameters("username", username, "password", password, "address", address));
+					  Result result = tx.run(query, parameters("username", username, "password", password, "address", address));
 					  Buyer temp = new Buyer(DB, username, password, address);
 					  tx.commit();
 
@@ -45,12 +48,12 @@ public class Database implements AutoCloseable{
 	  }
 
 	public Boolean buyerUsernameExists(final String username){
-		final String querry = "MATCH (n:Buyer) WHERE n.username = $username RETURN count(n) > 0 as n";
+		final String query = "MATCH (n:Buyer) WHERE n.username = $username RETURN count(n) > 0 as n";
 		try(Session session = driver.session()){
 			Boolean output = session.readTransaction(new TransactionWork<Boolean>(){
 				@Override
 				public Boolean execute( Transaction tx ){
-					Result result = tx.run(querry, parameters("username", username));
+					Result result = tx.run(query, parameters("username", username));
 					return result.single().get(0).asBoolean();
 				}
 			});
@@ -58,13 +61,17 @@ public class Database implements AutoCloseable{
 		} 
 	}
 
-	public String verifyBuyerPassword(final String username){
+	public Boolean verifyBuyerPassword(final String username, final String password){
 		final String query = "MATCH (n:Buyer) WHERE n.username = $username RETURN n.password";
 		try(Session session = driver.session()){
-			String output = session.readTransaction(new TransactionWork<String>(){
-				public String execute(Transaction tx){
+			Boolean output = session.readTransaction(new TransactionWork<Boolean>(){
+				public Boolean execute(Transaction tx){
 					Result result = tx.run(query, parameters("username", username));
-					return result.single().get(0).asString();
+					if(result.hasNext()){
+						return (result.single().get("n.password").asString().equals(password));
+					} else {
+						return false; 
+					}
 				}
 			});
 			return output;
@@ -74,11 +81,11 @@ public class Database implements AutoCloseable{
 	// Find buyer using username. Return a new buyer
 	
 	public Buyer findBuyer(final Database DB, final String username){
-		  final String querry = "MATCH (n:Buyer) WHERE n.username = $username RETURN n.address, n.password";
+		  final String query = "MATCH (n:Buyer) WHERE n.username = $username RETURN n.address, n.password";
 		  try(Session session = driver.session()){
 			  Buyer buyer = session.readTransaction(new TransactionWork<Buyer>(){
 				  public Buyer execute(Transaction tx){
-					  Result result = tx.run(querry, parameters("username", username));
+					  Result result = tx.run(query, parameters("username", username));
 					  Record record = result.single();
 
 					  Buyer temp = new Buyer(DB, username, record.get("n.address").asString(), record.get("n.password").asString());
@@ -187,13 +194,13 @@ public class Database implements AutoCloseable{
 	  }
 	  
 	public ArrayList<Farm> getAllFrams(final Database DB, final Categories categories){
-		final String querry = "MATCH (n:Farm) RETURN n.username";
+		final String query = "MATCH (n:Farm) RETURN n.username";
 		try(Session session = driver.session()){
 			ArrayList<Farm> farms = session.readTransaction(new TransactionWork<ArrayList<Farm>>(){
 				public ArrayList<Farm> execute(Transaction tx){
 
 					ArrayList<Farm> tempFarms = new ArrayList<Farm>();
-					Result result = tx.run(querry);
+					Result result = tx.run(query);
 
 					while(result.hasNext()){
 						tempFarms.add(findFarm(DB, categories, result.next().get("n.username").asString()));
@@ -223,12 +230,12 @@ public class Database implements AutoCloseable{
 	}
 
 	public Boolean farmUsernameExists(final String username){
-		final String querry = "MATCH (f:Farm) WHERE f.username = $username RETURN count(f) > 0 as f";
+		final String query = "MATCH (f:Farm) WHERE f.username = $username RETURN count(f) > 0 as f";
 		try(Session session = driver.session()){
 			Boolean output = session.readTransaction(new TransactionWork<Boolean>(){
 				@Override
 				public Boolean execute( Transaction tx ){
-					Result result = tx.run(querry, parameters("username", username));
+					Result result = tx.run(query, parameters("username", username));
 					return result.single().get(0).asBoolean();
 				}
 			});
@@ -290,13 +297,13 @@ public class Database implements AutoCloseable{
 	}
 
 	public ArrayList<Product> getFarmInventory(final Database DB, final Categories categories, final String username){
-		final String querry = "MATCH (n:Farm)-[:SELLS]-(p:Product) WHERE n.username = $username RETURN id(p)";
+		final String query = "MATCH (n:Farm)-[:SELLS]-(p:Product) WHERE n.username = $username RETURN id(p)";
 		try(Session session = driver.session()){
 			ArrayList<Product> farms = session.readTransaction(new TransactionWork<ArrayList<Product>>(){
 				public ArrayList<Product> execute(Transaction tx){
 
 					ArrayList<Product> tempInventory = new ArrayList<Product>();
-					Result result = tx.run(querry, parameters("username", username));
+					Result result = tx.run(query, parameters("username", username));
 
 					while(result.hasNext()){
 						tempInventory.add(findProduct(categories, DB, result.next().get(0).asInt()));
@@ -312,12 +319,12 @@ public class Database implements AutoCloseable{
 	}
 	
 	public Product findProduct(final Categories categories, final Database DB, final int id) {
-		final String querry = "MATCH (p:Product) WHERE id(p) = $id RETURN id(p) as id, p.name, p.category, p.subCategory, p.price, p.quantity";
+		final String query = "MATCH (p:Product) WHERE id(p) = $id RETURN id(p) as id, p.name, p.category, p.subCategory, p.price, p.quantity";
 		
 		try(Session session = driver.session()){
 			Product output = session.readTransaction(new TransactionWork<Product>() {
 				public Product execute(Transaction tx) {
-					Result result = tx.run(querry, parameters("id", id));
+					Result result = tx.run(query, parameters("id", id));
 					Record record = result.single();
 
 					Category tempCategory = categories.getCategoryByName(record.get("p.category").asString());

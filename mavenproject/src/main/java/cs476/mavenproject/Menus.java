@@ -5,8 +5,8 @@ import java.util.Scanner;
 public class Menus {
 
     Database DB;
-    Buyer mainBuyer = new Buyer();
-    Farm mainFarm = new Farm();
+    Buyer mainBuyer = null;
+    Farm mainFarm = null;
     Categories categories = new Categories();
     Login Login;
     HeadQ HeadQ;
@@ -17,7 +17,7 @@ public class Menus {
     public Menus(Database DB, Scanner input){
         this.DB = DB;
         this.input = input;
-        Login = new Login(DB, input, mainBuyer, mainFarm);
+        Login = new Login(DB, input, mainFarm);
         HeadQ = new HeadQ(DB, input, categories);
     }
 
@@ -31,7 +31,7 @@ public class Menus {
         String selection;
 
         System.out.println("Welcome to Farm to Table");
-        System.out.println("-------------------------\n");
+        System.out.println("------------------------");
         System.out.println("1 - Login as User");
         System.out.println("2 - Login as Farm");
         System.out.println("3 - Login as Admin");
@@ -42,40 +42,44 @@ public class Menus {
 
         switch(selection){
             case "1":
-            Utils.clearConsole();
-            //mainBuyer = Login.loginBuyer(DB);
-            Utils.clearConsole();
-            buyerMain();
-            break;
+                Utils.clearConsole();
+                Buyer buyerAuth = Login.loginBuyer();
+                if(buyerAuth != null){
+                    mainBuyer = buyerAuth;
+                    buyerMain();
+                } else {
+                    login();
+                }
+                break;
 
             case "2":
-            Utils.clearConsole();
-            //mainFarm = Login.loginFarm(DB);
-            Utils.clearConsole();
-            buyerMain();
-            break;
+                Utils.clearConsole();
+                //mainFarm = Login.loginFarm(DB);
+                Utils.clearConsole();
+                buyerMain();
+                break;
             
             case "3":
                 Utils.clearConsole();
-                Boolean auth = Login.loginAdmin();
-                if(auth){
+                Boolean adminAuth = Login.loginAdmin();
+                if(adminAuth){
                     adminMain();
                 } else {
                     login();
                 }
-            break;
+                break;
 
             case "4":
-            Utils.clearConsole();
-            mainBuyer = Login.createNewUser();
-            Utils.clearConsole();
-            buyerMain();
-            break;
+                Utils.clearConsole();
+                mainBuyer = Login.createNewUser();
+                Utils.clearConsole();
+                buyerMain();
+                break;
 
             default:
-            Utils.clearConsole();
-            System.out.println(selection + INVAL_SEL);
-            login();
+                Utils.clearConsole();
+                System.out.println(selection + INVAL_SEL);
+                login();
 
         }
 
@@ -114,6 +118,9 @@ public class Menus {
             break;
 
             case "5":
+            Utils.clearConsole();
+            mainBuyer = null;
+            login();
             break;
 
             default:
