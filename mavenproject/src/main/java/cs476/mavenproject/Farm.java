@@ -69,14 +69,16 @@ public class Farm {
 		}
 	}
 
-	public void viewInventory() {
+	public void viewInventory(Boolean withFarmName) {
 
 		pullInventory();
 
 		
 		if (inventory.size() > 0) {
-			System.out.println("\nFarm: " + username );
-			System.out.println("-----" );
+			if(withFarmName){
+				System.out.println("\nFarm: " + username );
+				System.out.println("-----" );
+			}
 			for (Product product : inventory) {
 				System.out.println(product.toString(false));
 				System.out.println("-");

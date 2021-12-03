@@ -236,6 +236,8 @@ public class Menus {
 
         switch(selection){
             case "1":
+                Utils.clearConsole();
+                farmInventory();
                 break;
 
             case "2":
@@ -260,6 +262,34 @@ public class Menus {
 
     }
     
+    public void farmInventory(){
+        String selection = "";
+
+        System.out.println("Your Inventory | 1 - Back");
+        System.out.println("-------------------------");
+
+        mainFarm.viewInventory(false);
+
+
+        while(selection != "valid"){
+
+            System.out.print("\nYour selection: ");
+            selection = input.nextLine();
+    
+            switch(selection){
+                case "1":
+                    Utils.clearConsole();
+                    farmMain();
+                    selection = "valid";
+                    break;
+
+                default:
+                    System.out.println(selection + INVAL_SEL);
+            }
+        }
+        
+
+    }
     public void adminMain() {
         String selection;
 

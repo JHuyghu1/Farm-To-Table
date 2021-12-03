@@ -74,10 +74,10 @@ public class Product {
 
 		return cartView
 
-				? "|~ ID: " + identity + " | " + name + " | " + category.name() + " - " + subCategory.name() + " | Price: $" + price
+				? "|~ ID: " + identity + " | " + name + " | " + subCategory.name() + " | Price: $" + price
 						+ " | Serving Size: " + weight + " grams | In Cart: "
 
-				: "|~ ID: " + identity + " | " +name + " | " + category.name() + " - " + subCategory.name() + " | Price: $" + price
+				: "|~ ID: " + identity + " | " +name + " | " + subCategory.name() + " | Price: $" + price
 						+ " | Serving Size: " + weight + " grams | Quiantity Left: " + quantity;
 
 	}

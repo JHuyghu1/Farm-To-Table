@@ -43,7 +43,6 @@ public class Cart {
 		ArrayList<Product> copiedProducts = new ArrayList<Product>();
 
 		for (Product product : products) {
-
 			copiedProducts.add(product.copy());
 
 		}

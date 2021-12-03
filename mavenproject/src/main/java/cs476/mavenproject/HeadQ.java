@@ -279,7 +279,7 @@ public class HeadQ {
 
 		if (farms.size() > 0) {
 			for (Farm farm : farms) {
-				farm.viewInventory();
+				farm.viewInventory(true);
 
 				if(farm.inventory().size() < 1)
 					emptyFarms.add(farm.name());
