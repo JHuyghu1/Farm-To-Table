@@ -5,14 +5,14 @@ import java.util.Scanner;
 public class Login {
 
     Database DB;
-    Farm farm;
     Scanner input;
+    Categories categories;
 
-    public Login(Database DB, Scanner input, Farm farm){
+    public Login(Database DB, Scanner input, Categories categories){
 
         this.DB = DB;
         this.input = input;
-        this.farm = farm;
+        this.categories = categories;
 
     }
 
@@ -132,4 +132,49 @@ public class Login {
 
     }
 
+    public Farm loginFarm(){
+
+        String username = "";
+        String password = "";
+        Farm retFarmer = null;
+        System.out.println("Log into farm account | 0 to go back");
+        System.out.println("-------------------------------------\n");
+        
+
+
+        while(password == ""){
+
+            System.out.print("Enter username: ");
+            username = input.nextLine();
+    
+            if(username.equals("0")) break;
+            
+    
+            System.out.print("Enter Password: ");
+            String inputPass = input.nextLine();
+
+            switch(inputPass){
+                case "0":
+                    password = inputPass;
+                    break;
+
+                default:
+                    password = inputPass;
+                    if(DB.verifyFarmPassword(username, password)){
+                        retFarmer =  DB.findFarm(DB, categories, username);
+                    } else {
+                        password = "";
+                        System.out.println("Wrong username or password try again!\n");
+                    }
+                break;
+            }
+
+        }
+
+        Utils.clearConsole();
+
+        return retFarmer;
+
+
+    }
 }

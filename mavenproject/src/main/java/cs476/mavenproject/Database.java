@@ -215,16 +215,20 @@ public class Database implements AutoCloseable{
 
 	}
 
-	public String verifyFarmPassword(final String username){
-		final String query = "MATCH (m:Farm) WHERE m.username = $username RETURN m.password";
+	public Boolean verifyFarmPassword(final String username, final String password){
+		final String query = "MATCH (n:Farm) WHERE n.username = $username RETURN n.password";
 		try(Session session = driver.session()){
-			String password = session.readTransaction(new TransactionWork<String>(){
-				public String execute(Transaction tx){
+			Boolean output = session.readTransaction(new TransactionWork<Boolean>(){
+				public Boolean execute(Transaction tx){
 					Result result = tx.run(query, parameters("username", username));
-					return result.single().get(0).asString();
+					if(result.hasNext()){
+						return (result.single().get("n.password").asString().equals(password));
+					} else {
+						return false; 
+					}
 				}
 			});
-			return password;
+			return output;
 		}
 
 	}

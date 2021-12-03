@@ -17,7 +17,7 @@ public class Menus {
     public Menus(Database DB, Scanner input){
         this.DB = DB;
         this.input = input;
-        Login = new Login(DB, input, mainFarm);
+        Login = new Login(DB, input, categories);
         HeadQ = new HeadQ(DB, input, categories);
     }
 
@@ -54,10 +54,14 @@ public class Menus {
 
             case "2":
                 Utils.clearConsole();
-                //mainFarm = Login.loginFarm(DB);
-                Utils.clearConsole();
-                buyerMain();
-                break;
+                Farm farmAuth = Login.loginFarm();
+                if(farmAuth != null){
+                    mainFarm = farmAuth;
+                    System.out.println("Logged in");
+                } else {
+                    login();
+                }
+            break;
             
             case "3":
                 Utils.clearConsole();
