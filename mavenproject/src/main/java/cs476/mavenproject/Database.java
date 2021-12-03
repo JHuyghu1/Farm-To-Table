@@ -247,16 +247,19 @@ public class Database implements AutoCloseable{
 		}	
 	}
 
-	public void addProductToDatabase(final String prodID, final Farm farm, final String name, final Category category, final SubCategory subCategory, final double price, final int quantityLeft, final int quantityWanted) {
-		final String product = "CREATE p;Product {p.id: $prodID, p.Farm: $farm, p.name: $name, p.category: $category, p.subCategory: $subCat , p.price: $price, p.quantityLeft: $left, p.quantityWanted: $wanted";
+	public Product createProductNode(final Database DB, final String name, final Category category, final SubCategory subCategory, final double price, final int quantity) {
+		final String query = "CREATE p:Product {p.name: $name, p.category: $category, p.subCategory: $subCat, p.price: $price, p.quantity: $quantity"
+							+ "RETURN id(p)";
 		try(Session session = driver.session()){
-			String temp = session.writeTransaction(new TransactionWork<String>() {
-				public String execute(Transaction tx) {
-					Result result = tx.run(product, parameters("prodId", prodID, "farm", farm, "name", name, "category", category, "subCat", subCategory, "price", price, "left", quantityLeft, "wanted", quantityWanted));
+			Product product = session.writeTransaction(new TransactionWork<Product>() {
+				public Product execute(Transaction tx) {
+					Result result = tx.run(query, parameters("name", name, "category", category.name(), "subCat", subCategory.name(), "price", price, "quantity", quantity));
 					tx.commit();
-					return result.single().get("id").asString();
+					Product temp = new Product(DB, result.single().get(0).asString(), name, category, subCategory, price, quantity);
+					return temp;
 				}
 			});
+		return product;
 		}
 	}
 
