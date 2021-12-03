@@ -35,16 +35,24 @@ public class Menus {
         System.out.println("1 - Login as User");
         System.out.println("2 - Login as Farm");
         System.out.println("3 - Login as Admin");
-        System.out.println("4 - Creat a new account");
+        System.out.println("4 - Create a new account");
 
         System.out.print("\nYour selection: ");
         selection = input.nextLine();
 
         switch(selection){
             case "1":
+            Utils.clearConsole();
+            //mainBuyer = Login.loginBuyer(DB);
+            Utils.clearConsole();
+            buyerMain();
             break;
 
             case "2":
+            Utils.clearConsole();
+            //mainFarm = Login.loginFarm(DB);
+            Utils.clearConsole();
+            buyerMain();
             break;
             
             case "3":
