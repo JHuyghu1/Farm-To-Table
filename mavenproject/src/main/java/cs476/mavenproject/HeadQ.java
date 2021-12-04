@@ -261,8 +261,6 @@ public class HeadQ {
 	}
 
 
-
-
 	public ArrayList<Farm> farms() {
 		return farms;
 	}

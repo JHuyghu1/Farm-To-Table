@@ -217,8 +217,16 @@ public class AppDriver {
             break;
 
             case "2":
-                Utils.clearConsole();
-                buyerEditCartItem();
+                if(mainBuyer.cart.isEmpty()){
+                    Utils.clearConsole();
+                    System.out.println("Your cart is empty!\n");
+                    buyerCart();
+    
+
+                } else {
+                    Utils.clearConsole();
+                    buyerEditCartItem();    
+                }
                 break;
             
             case "3":
@@ -273,6 +281,8 @@ public class AppDriver {
         int poductId = selectedProduct.identity();
         int cartQuantity = mainBuyer.cart.contains(poductId);
         int productQuantity = selectedProduct.quantity() - cartQuantity;
+        int maxQuantity = mainBuyer.cart.maxQuantity(selectedProduct);
+
 
         mainBuyer.cart.printProduct(productId);
 
@@ -290,7 +300,11 @@ public class AppDriver {
                 case"1":
                 if(productQuantity - cartQuantity < 1){
                     System.out.println("No product available to to add");
-                } else {
+
+                } else if(maxQuantity == 0){
+                    System.out.println("Not enough capacity left");
+
+                }else {
                     Utils.clearConsole();
                     increaseCartItem(selectedProduct);
                     valid = true;
@@ -327,6 +341,7 @@ public class AppDriver {
         int poductId = product.identity();
         int cartQuantity = mainBuyer.cart.contains(poductId);
         int productQuantity = product.quantity() - cartQuantity;
+        int maxQuantity = mainBuyer.cart.maxQuantity(product);
 
         System.out.println("\nIn your Cart: " + cartQuantity);
         System.out.println("-------------");
@@ -340,7 +355,9 @@ public class AppDriver {
                 selection = input.nextLine();
                 increaseBy = Integer.parseInt(selection);
                 if(increaseBy < 1) throw new Exception("Enter a number greater then 0!");
+                if(increaseBy > maxQuantity) throw new Exception("You can only add up to " + maxQuantity + "more!");
                 if(increaseBy > productQuantity) throw new Exception("Not enough product available");
+
                 valid = true;
 
             }catch(NumberFormatException e){
@@ -570,7 +587,7 @@ public class AppDriver {
 
         System.out.println("Choose a category | 0 - Back");
 		System.out.println("----------------------------");
-		System.out.println("1. Vegtables");
+		System.out.println("1. Vegetables");
 		System.out.println("2. Fruits");
 		System.out.println("3. Herbs\n");
 

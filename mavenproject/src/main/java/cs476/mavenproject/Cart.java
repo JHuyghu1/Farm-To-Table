@@ -4,8 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map.Entry;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicLong;
 
 
 public class Cart {
@@ -174,5 +172,9 @@ public class Cart {
 		} else {
 			System.out.println("Product isn't in cart!");
 		}
+	}
+
+	public boolean isEmpty(){
+		return products.size() < 1;
 	}
 }
