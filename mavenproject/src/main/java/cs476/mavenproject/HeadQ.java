@@ -246,6 +246,7 @@ public class HeadQ {
 			System.out.print("\nEnter Restock Amount: ");
 			selection = input.nextLine();
 			try{
+				//Increase quantity
 				quantity += Integer.parseInt(selection);
 				selection = "valid";
 
@@ -254,7 +255,8 @@ public class HeadQ {
 			}
 		}
 
-		DB.restockProduct(poductId, quantity);
+		//Push to database
+		DB.updateProductQuantity(poductId, quantity);
 
 		Utils.clearConsole();
 

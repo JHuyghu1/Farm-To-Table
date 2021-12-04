@@ -42,7 +42,7 @@ public class Login {
         System.out.print("Enter your address: ");
         address = input.nextLine();
 
-        Buyer tempBuyer = DB.createBuyerNode(DB, username, password, address);
+        Buyer tempBuyer = DB.createBuyerNode(DB, categories, username, password, address);
         
         return tempBuyer;
     }
@@ -115,7 +115,7 @@ public class Login {
                 default:
                     password = inputPass;
                     if(DB.verifyBuyerPassword(username, password)){
-                        retBuyer =  DB.findBuyer(DB, username);
+                        retBuyer =  DB.findBuyer(DB, categories, username);
                     } else {
                         password = "";
                         System.out.println("Wrong username or password try again!\n");

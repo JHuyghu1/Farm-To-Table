@@ -11,34 +11,17 @@ public class Buyer {
 	private ArrayList<Buyer> following = new ArrayList<Buyer>();
 	Cart cart;
 	Database DB;
+	Categories categories;
 
-	//Initalize an empty buyer
-	public Buyer(){
-	}
-
-	public Buyer(Database DB,  final String username, final String password, final String address) {
+	public Buyer(Database DB, Categories categories, final String username, final String password, final String address) {
 
 		this.DB = DB;
+		this.categories = categories;
 		this.username = username;
 		this.password = password;
 		this.address = address;
-		this.cart = new Cart(this);
-
-	}
-
-	public Buyer(Database DB, final String username) {
-
-		//Initialize database
-		this.DB = DB;
-
-		//TODO: Pull the buyer from the database
-		// Buyer temp = DB.findBuyer(DB, username);
-
-		// Initialize the Buyer
-		/* this.username = temp.username;
-		this.password = temp.password;
-		this.address = temp.address;
-		this.cart = new Cart(this); */
+		this.cart = new Cart(DB, categories, this.username);
+		this.purchaseHistory = DB.getBuyerPurchaseHistory(DB, categories, username);
 
 	}
 
@@ -105,10 +88,13 @@ public class Buyer {
 
 	}
 
-	public void viewPurchaseHistory() {
+	public void updatePurchaseHistory(){
+		purchaseHistory = DB.getBuyerPurchaseHistory(DB, categories, username);
+	}
 
+	public void viewPurchaseHistory() {
 		for (Cart cart : purchaseHistory) {
-			cart.viewCart();
+			cart.viewCart(false);
 			System.out.println();
 
 		}

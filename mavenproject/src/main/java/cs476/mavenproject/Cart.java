@@ -1,7 +1,7 @@
 package cs476.mavenproject;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.Map.Entry;
 
@@ -9,39 +9,57 @@ import java.util.Map.Entry;
 public class Cart {
 
 	public static enum CartStatus{
-		BUILD,
+		NEW,
 		ORDERED,
         SHIPPED,
         DELIVERED
 	}
 
 	private Map<Integer, Entry<Product,Integer>> products = new HashMap<Integer, Entry<Product,Integer>>();
-	private Buyer owner;
+	private String owner;
+	private int identity = -1;
 	private double payloadWeight = 0;
-	private double cost = 0;
-	private CartStatus status = CartStatus.BUILD;
+	private double totalCost = 0;
+	private CartStatus status = CartStatus.NEW;
 	Database DB;
+	Categories categories;
 
 
-	public Cart(Buyer buyer) {
-		this.owner = buyer;
-
+	//Used for a new cart
+	public Cart(Database DB, Categories categories, String owner) {
+		this.DB = DB;
+		this.owner = owner;
+		this.categories = categories;
 	}
 
-	public Cart(Buyer buyer, Map<Integer, Entry<Product,Integer>> products, double payloadWeight, double cost) {
-		this.owner = buyer;
-		this.cost = cost;
-		this.products = products;
+	public Cart(Database DB, Categories categories, int identity, String owner, double payloadWeight, double totalCost, CartStatus status) {
+		this.DB = DB;
+		this.categories = categories;
+		this.owner = owner;
+		this.identity = identity;
+		this.totalCost = totalCost;
 		this.payloadWeight = payloadWeight;
-
+		this.status = status;
+		pullCartItems();
 	}
 
-	// TODO: Get order from database
-	public Cart(String id) {
-
-		//Cart temp = DB.findCart(id);
-		//need to find a way to return cart object with ArrayList variable in it, within neo4j
+	public void pullCartItems(){
+		products = DB.getCartItems(DB, categories, identity);
+		
 	}
+
+	public Double currentWeight() {
+		return payloadWeight;
+	}
+
+	public int identity(){
+		return identity;
+	}
+
+	public String statusString(){
+		return Utils.stringFromStatus(status);
+	}
+
 
 	public int maxQuantity(Product p){
 		int maxQuantity = 0;
@@ -55,13 +73,40 @@ public class Cart {
 
 	}
 
-	public Double currentWeight() {
-		return payloadWeight;
-	}
+	public int checkout(Scanner input, boolean override) {
 
-	public void checkout() {
+		boolean updated = false;
+		int retID = -1;
 
+		if(!override) updated = updateCartToCurrentSupply();
+		
+		if(updated && !override){
 
+			userInputForCartChange(input);
+ 
+		} else {
+			Cart newCart = DB.createCartNode(DB, categories, owner, payloadWeight, totalCost, Utils.stringFromStatus(status));
+		
+			retID = newCart.identity;
+
+			products.forEach((k,v) -> {
+	
+				int cartId = newCart.identity;
+				int productId = v.getKey().identity();
+				int amount = v.getValue();
+
+				int newProductQuantity = v.getKey().quantity() - amount;
+	
+				DB.addProductToCart(cartId, productId, amount);
+				DB.updateProductQuantity(productId, newProductQuantity);
+	
+	
+			} );
+			
+			DB.updateCartStatus(retID, CartStatus.ORDERED);
+		}
+
+		return retID;
 	}
 
 	public int contains(int productId){
@@ -97,7 +142,7 @@ public class Cart {
 			products.put(productId, new SimpleEntry<Product, Integer>(product, cartItem.getValue() - quantity));
 		}
 
-		updatePayloadWeight();
+		upateCartMetrics();
 
 	}
 
@@ -119,33 +164,85 @@ public class Cart {
 
 		}
 
-		updatePayloadWeight();
+		upateCartMetrics();
 	}
 
 	//Go through cart and update the payload weight
-	private void updatePayloadWeight(){
+	private void upateCartMetrics(){
 
 		final double [] weightSum = {0};
+		final double [] cost = {0};
 
 		products.forEach((k,v) -> {
 			weightSum[0] = weightSum[0] + (v.getKey().weight()*v.getValue());
+			cost[0] = cost[0] + (v.getKey().price()*v.getValue());
+
 		} );
+
+		totalCost = cost[0];
 
 		payloadWeight = weightSum[0];
 	}
 
-	public void viewCart() {
+	private boolean updateCartToCurrentSupply(){
 
-		if(products.size() == 0){
-			System.out.println("You have no products in your cart!");
+		final boolean [] changed = {false};
 
+		products.forEach((k,v) -> {
+			
+			//Cart Product
+			int productId = v.getKey().identity();
+			int cartQuantity = v.getValue();
+
+			//Pull product quantity to get most uptodate quantity
+			Product updatedProduct = DB.findProduct(categories, DB, productId);
+			int updatedProductQuanity = updatedProduct.quantity();
+
+			//Check if you have enough room
+			int quanityDifference = updatedProductQuanity - cartQuantity;
+
+			//Update the product in cart
+			products.put(productId, new SimpleEntry<Product, Integer>(updatedProduct, cartQuantity));
+
+
+			if(quanityDifference < 0){
+				remove(updatedProduct, quanityDifference);
+				System.out.println("Removed " + quanityDifference + " Product ID: " + productId + " from cart due to low supply!\n");
+				changed[0] = true;
+			}
+
+		});
+
+		return changed[0];
+	}
+
+	//Print all cart items (Not categorized by farm)
+	public void viewCart(boolean newCart) {
+
+
+		if(newCart){
+
+			if(products.size() == 0){
+				System.out.println("You have no products in your cart!");
+	
+			} else {
+	
+				updateCartToCurrentSupply();
+				products.forEach((k,v) -> {
+					System.out.println(v.getKey().toString(true, v.getValue()));
+				} );
+		
+			}
 		} else {
+			
+			System.out.println("\nStatus: " + Utils.stringFromStatus(status));
+			System.out.println("------------------");
+
 			products.forEach((k,v) -> {
 				System.out.println(v.getKey().toString(true, v.getValue()));
 			} );
-	
-		}
 
+		}
 
 		/*
 		int index = 0;
@@ -165,6 +262,7 @@ public class Cart {
 		*/
 	}
 
+	//Print a cart proudct to the console
 	public void printProduct(int productId){
 		if(products.containsKey(productId)){
 			Entry<Product, Integer> cartItem = products.get(productId);
@@ -176,5 +274,33 @@ public class Cart {
 
 	public boolean isEmpty(){
 		return products.size() < 1;
+	}
+
+	private void userInputForCartChange(Scanner input){
+		System.out.println("Items were removed due to suppluy, would you still like to checkout?");
+		System.out.println("----------------");
+		System.out.println("1 - Yes | 2 - No");
+		System.out.println("----------------");
+		
+		String selection = "";
+		boolean valid = false;
+
+		while(!valid){
+			System.out.print("\nYour selection: ");
+			selection = input.nextLine();
+
+			switch(selection){
+				case "1":
+					valid = true;
+					checkout(input, true);
+					break;
+				case"2":
+					valid = true;
+					break;
+				default:
+					System.out.println(selection + " is an invalid selection!");
+			}
+
+		}
 	}
 }

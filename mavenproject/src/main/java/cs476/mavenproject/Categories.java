@@ -1,6 +1,5 @@
 package cs476.mavenproject;
 import java.util.HashMap;
-import java.util.Hashtable;
 import java.util.Map;
 
 //import SubCategory;

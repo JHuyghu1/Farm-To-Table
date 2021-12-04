@@ -1,6 +1,4 @@
 package cs476.mavenproject;
-import java.util.ArrayList;
-//import org.neo4j.driver.*;
 import java.util.Scanner;
 
 

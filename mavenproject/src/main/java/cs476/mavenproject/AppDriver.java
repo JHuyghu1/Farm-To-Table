@@ -3,8 +3,6 @@ package cs476.mavenproject;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-import javax.rmi.CORBA.Util;
-
 import cs476.mavenproject.Categories.Category;
 
 public class AppDriver {
@@ -103,7 +101,8 @@ public class AppDriver {
         System.out.println("2 - Search Products");
         System.out.println("3 - View following");
         System.out.println("4 - View Cart");
-        System.out.println("5 - Logout");
+        System.out.println("5 - View History");
+        System.out.println("6 - Logout");
 
 
         
@@ -112,33 +111,44 @@ public class AppDriver {
 
         switch(selection){
             case "1":
-            Utils.clearConsole();
-            buyerSearch("User");
-            break;
+                Utils.clearConsole();
+                buyerSearch("User");
+                break;
 
             case "2":
-            Utils.clearConsole();
-            buyerSearch("Product");
-            break;
+                Utils.clearConsole();
+                buyerSearch("Product");
+                break;
             
             case "3":
             break;
 
             case "4":
-            Utils.clearConsole();
-            buyerCart();
-            break;
+                Utils.clearConsole();
+                buyerCart();
+                break;
 
             case "5":
-            Utils.clearConsole();
-            mainBuyer = null;
-            login();
-            break;
+                Utils.clearConsole();
+                if(mainBuyer.purchaseHistory().isEmpty()){
+                    System.out.println("You havn't made a purchase yet!");
+                    System.out.println("-------------------------------\n");
+                    buyerMain();    
+                } else {
+                    buyerHistory();
+                }
+                break;
+
+            case "6":
+                Utils.clearConsole();
+                mainBuyer = null;
+                login();
+                break;
 
             default:
-            Utils.clearConsole();
-            System.out.println(selection + INVAL_SEL + '\n');
-            buyerMain();
+                Utils.clearConsole();
+                System.out.println(selection + INVAL_SEL + '\n');
+                buyerMain();
 
         }
         
@@ -202,7 +212,7 @@ public class AppDriver {
 
 
 
-        mainBuyer.cart.viewCart();
+        mainBuyer.cart.viewCart(true);
 
         System.out.println("\n---------------------------------------");
         System.out.println("1 - Checkout | 2 - Edit Item | 3 - Back");
@@ -214,17 +224,33 @@ public class AppDriver {
 
         switch(selection){
             case "1":
+            Utils.clearConsole();
+            if(mainBuyer.cart.isEmpty()){
+                System.out.println("No items to buy!");
+                System.out.println("-----------------\n");
+                buyerCart();
+                
+            } else {
+                int cartId = mainBuyer.cart.checkout(input, false);
+                Utils.clearConsole();
+                mainBuyer.cart = new Cart(DB, categories, mainBuyer.username());
+                mainBuyer.updatePurchaseHistory();
+                System.out.print("Your order number is " + cartId + "\n");
+                buyerMain();
+  
+            }
+
             break;
 
             case "2":
+                Utils.clearConsole();
                 if(mainBuyer.cart.isEmpty()){
-                    Utils.clearConsole();
-                    System.out.println("Your cart is empty!\n");
+                    System.out.println("No items to edit!");
+                    System.out.println("-----------------\n");
+
                     buyerCart();
-    
 
                 } else {
-                    Utils.clearConsole();
                     buyerEditCartItem();    
                 }
                 break;
@@ -236,13 +262,26 @@ public class AppDriver {
 
             default:
                 Utils.clearConsole();
-                System.out.println(selection + INVAL_SEL + "TEST");
+                System.out.println(selection + INVAL_SEL);
                 buyerCart();
                 break;
         }
         
     }
 
+    public void buyerHistory(){
+
+        System.out.println("Purchase History | Press enter to go back");
+        System.out.print("------------------------------------------\n");
+
+        mainBuyer.viewPurchaseHistory();
+        input.nextLine();
+
+        Utils.clearConsole();
+        buyerMain();
+
+    }
+   
     public void buyerEditCartItem(){
 
         String selection = "";
@@ -250,7 +289,7 @@ public class AppDriver {
 
         int productId = 0;
 
-        mainBuyer.cart.viewCart();
+        mainBuyer.cart.viewCart(false);
 
         System.out.println("\n----------------------");
         System.out.println("Choose an item to edit");
@@ -713,11 +752,13 @@ public class AppDriver {
                     break;
                 
                 case "2":
+                    Utils.clearConsole();
                     selection = "valid";
                     buyerSearch("product");
                     break;
                 
                 case "3":
+                    Utils.clearConsole();
                     selection = "valid";
                     buyerMain();
                     break;

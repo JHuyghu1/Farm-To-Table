@@ -10,10 +10,6 @@ public class Farm {
 	Database DB;
 	Categories categories;
 
-
-	//Initaliize empty farm
-	public Farm(){};
-
 	// Constructor from client
 	public Farm(Database DB, Categories categories, String username, String password) {
 		this.DB = DB;
@@ -21,12 +17,6 @@ public class Farm {
 		this.username = username;
 		this.password = password;
 		pullInventory();
-	}
-
-	// Constructor from DB
-	public Farm(String username) {
-		//TODO: Pull farm from db
-		
 	}
 
 	public String name() {

@@ -1,17 +1,13 @@
 package cs476.mavenproject;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
-import javax.print.attribute.standard.Sides;
-
+import java.util.AbstractMap.SimpleEntry;
+import java.util.Map.Entry;
 import java.util.HashMap;
-
 import org.neo4j.driver.*;
-
+import cs476.mavenproject.Cart.CartStatus;
 import cs476.mavenproject.Categories.Category;
-
 import static org.neo4j.driver.Values.parameters;
+
 
 public class Database implements AutoCloseable{
 	private final Driver driver;
@@ -27,7 +23,7 @@ public class Database implements AutoCloseable{
 		driver.close();
 	}
 
-	public Buyer createBuyerNode(final Database DB, final String username, final String password, final String address ){
+	public Buyer createBuyerNode(final Database DB, final Categories categories, final String username, final String password, final String address ){
 		  final String query = "CREATE (n: Buyer {username: $username, password: $password, address: $address} ) RETURN n.identity";
 		  try(Session session = driver.session())
 		  {
@@ -35,8 +31,8 @@ public class Database implements AutoCloseable{
 			 {
 				  public Buyer execute(Transaction tx)
 				  {
-					  Result result = tx.run(query, parameters("username", username, "password", password, "address", address));
-					  Buyer temp = new Buyer(DB, username, password, address);
+					  tx.run(query, parameters("username", username, "password", password, "address", address));
+					  Buyer temp = new Buyer(DB, categories, username, password, address);
 					  tx.commit();
 
 					  return temp;
@@ -78,9 +74,8 @@ public class Database implements AutoCloseable{
 		}
 
 	}
-	// Find buyer using username. Return a new buyer
 	
-	public Buyer findBuyer(final Database DB, final String username){
+	public Buyer findBuyer(final Database DB, final Categories categories, final String username){
 		  final String query = "MATCH (n:Buyer) WHERE n.username = $username RETURN n.address, n.password";
 		  try(Session session = driver.session()){
 			  Buyer buyer = session.readTransaction(new TransactionWork<Buyer>(){
@@ -88,7 +83,7 @@ public class Database implements AutoCloseable{
 					  Result result = tx.run(query, parameters("username", username));
 					  Record record = result.single();
 
-					  Buyer temp = new Buyer(DB, username, record.get("n.address").asString(), record.get("n.password").asString());
+					  Buyer temp = new Buyer(DB, categories, username, record.get("n.address").asString(), record.get("n.password").asString());
 					  return temp;
 				  }
 			  });
@@ -124,45 +119,7 @@ public class Database implements AutoCloseable{
 			  });
 		  }														
 	  }
-	
-	public void addCartToDatabase(final Buyer buyer, final String cart_id, final ArrayList<Product> products, final double weight, final double cost) {
-		  final String cart = "MATCH (n:Buyer) WHERE n.username = $username, n.password = $password, AND n.address = $address"
-		  					+ "CREATE (c:CART {owner: n, cartID: $c_id, weight: $weight, cost: $cost, products:[$products]}) "
-		  					+ "CREATE (n)-[r:PURCHASED]->(c)";
-		  try(Session session = driver.session()){
-			  String x = session.writeTransaction(new TransactionWork<String>() {
-				  public String execute(Transaction tx) {
-					  Result result = tx.run(cart, parameters("username", buyer.username(), "password", buyer.password(), "address", buyer.address(), 
-							  "c_id", cart_id,  "weight", weight, "cost", cost, "products", products));
-					  tx.commit();
-					  return result.single().get("id").asString();
-				  }
-			  });
-		  }
-	  }
-	  
-	/*public void addProductToCart(final Cart cart, final String product_id){
-		final String query = "MATCH (c:Cart) WHERE c.id = $id"
-							
-	}
-	public Cart findCart(final String id) {
-		  final String query = "MATCH (c:Cart) WHERE id(c) = $id RETURN c, collect(c.products) AS products";
-		  try (Session session = driver.session()){
-			  Cart output = session.readTransaction(new TransactionWork<Cart>() {
-				  public Cart execute(Transaction tx) {
-					Result result = tx.run(query, parameters("id", id));
-					  return result;
-				  }  
-			  });
-					  
-			  Buyer temp = new Buyer(id, output.single().get("username").asString(), output.single().get("password").asString(), output.single().get("address").asString());
-			  
-			  //trying to convert product result from database to an ArrayList
-			  Cart cart = new Cart( temp, id, output.single().get("products").as, output.single().get("weight").asDouble(), output.single().get("cost").asDouble() );
-					 
-		  }
-	  }*/
-	
+		  	
 	public Farm createFarmNode(final Database DB, final Categories categories, final String username, final String  password) {
 		  final String query = "CREATE (f: Farm {username: $username, password: $password}) RETURN f";
 		  try(Session session = driver.session()){
@@ -263,7 +220,7 @@ public class Database implements AutoCloseable{
 		  } 		
 	}
 	
-	public void restockProduct(final int id, final int amount) {
+	public void updateProductQuantity(final int id, final int amount) {
 		final String product = "MATCH (p:Product) WHERE id(p) = $id "
 				+ "SET p.quantity = $amount "
 				+ "RETURN p";
@@ -365,7 +322,156 @@ public class Database implements AutoCloseable{
 
 	}
 
-	public Buyer recommendNewFollowers(final Database DB, final String username){
+	public Cart createCartNode(final Database DB, final Categories categories, final String username, final double weight, final double cost, final String status) {
+
+		final String query = "MATCH (b:Buyer) WHERE b.username = $username " +
+							 "CREATE (c:Cart {owner: $username, cost: $cost, weight: $weight, status: $status}) " +
+							 "CREATE (b)-[:PURCHASED]->(c) " +
+							 "RETURN id(c)";
+		try(Session session = driver.session()){
+			Cart cart = session.writeTransaction(new TransactionWork<Cart>() {
+				public Cart execute(Transaction tx) {
+					Result result = tx.run(query, parameters("username", username, "weight", weight, "cost", cost, "status", status));
+					Record record = result.single();
+					int tempId = record.get(0).asInt();
+					tx.commit();
+					Cart temp = new Cart(DB, categories, tempId, username, weight, cost, Utils.statusFromString(status));
+					return temp;
+				}
+			});
+		return cart;
+		}
+	}
+
+	public Cart findCart(final Categories categories, final Database DB, final int id) {
+		final String query = "MATCH (c:Cart) WHERE id(c) = $id RETURN c.owner, c.weight, c.cost, c.status";
+		
+		try(Session session = driver.session()){
+			Cart output = session.readTransaction(new TransactionWork<Cart>() {
+				public Cart execute(Transaction tx) {
+					Result result = tx.run(query, parameters("id", id));
+
+					if(result.hasNext()){
+
+						Record record = result.single();
+
+						String owner = record.get("c.owner").asString();
+						double payloadWeight = record.get("c.weight").asDouble();
+						double totalCost = record.get("c.cost").asDouble();
+						String stringStatus = record.get("c.status").asString();
+						CartStatus status = Utils.statusFromString(stringStatus);
+
+
+
+						Cart tempCart = new Cart(DB, categories, id, owner, payloadWeight, totalCost, status);
+
+						return tempCart;
+
+					} else {
+
+						return null;
+					}
+					
+				}
+			});
+
+			return output;
+		}
+	}
+
+	public void addProductToCart(final int cartId, final int prodId, final int amount) {
+		final String query = "MATCH (c:Cart), (p:Product) " +
+							 "WHERE id(c) = $cartId AND id(p) = $prodId "+
+							 "CREATE (c)-[:CONTAINS{amount: $amount}]->(p) " +
+							 "RETURN c,p";
+		try(Session session = driver.session()){
+			session.writeTransaction(new TransactionWork<String>() {
+				public String execute(Transaction tx) {
+					tx.run(query, parameters("cartId", cartId, "prodId", prodId, "amount", amount ));
+					tx.commit();
+
+					return null;
+				}
+			});
+		} 		
+  }
+
+  	public HashMap<Integer, Entry<Product,Integer>> getCartItems(final Database DB, final Categories categories, final int cartId){
+
+		final String query = "MATCH (c:Cart)-[r:CONTAINS]-(p:Product) WHERE id(c) = $cartId RETURN id(p) as id, r.amount";
+		try(Session session = driver.session()){
+			HashMap<Integer, Entry<Product,Integer>> output = session.readTransaction(new TransactionWork<HashMap<Integer, Entry<Product,Integer>>>(){
+				public HashMap<Integer, Entry<Product,Integer>> execute(Transaction tx){
+
+					HashMap<Integer, Entry<Product,Integer>> tempInventory = new HashMap<Integer, Entry<Product,Integer>>();
+
+					Result result = tx.run(query, parameters("cartId", cartId));
+
+					while(result.hasNext()){
+						Record record = result.next();
+						int productId = record.get("id").asInt();
+						int productAmount = record.get("r.amount").asInt();
+						Product product = findProduct(categories, DB, productId);
+
+						tempInventory.put(productId, new SimpleEntry<Product, Integer>(product, productAmount));
+
+					}
+
+					return tempInventory;
+
+				}
+			});
+			return output;
+		} 
+
+	}
+	
+	public void updateCartStatus(final int cartId, final CartStatus status){
+		final String product = "MATCH (c:Cart) WHERE id(c) = $cartId "
+							 + "SET c.status = $status "
+							 + "RETURN c";
+		try(Session session = driver.session()){
+			session.writeTransaction(new TransactionWork<String>() {
+				public String execute(Transaction tx) {
+					tx.run(product, parameters("cartId", cartId, "status", Utils.stringFromStatus(status)));
+					tx.commit();
+
+					return null;
+				}
+			});
+		}	
+
+	}
+	
+	public ArrayList<Cart> getBuyerPurchaseHistory(final Database DB, final Categories categories, final String username ){
+
+		final String query = "MATCH (b:Buyer)-[:PURCHASED]->(c:Cart) WHERE b.username = $username RETURN id(c) as id";
+		try(Session session = driver.session()){
+			ArrayList<Cart> carts = session.readTransaction(new TransactionWork<ArrayList<Cart>>(){
+				public ArrayList<Cart> execute(Transaction tx){
+
+					ArrayList<Cart> tempCarts = new ArrayList<Cart>();
+					Result result = tx.run(query, parameters("username", username));
+
+					while(result.hasNext()){
+						Record record = result.next();
+						int cartId = record.get("id").asInt();
+						Cart foundCart = findCart(categories, DB, cartId);
+						tempCarts.add(foundCart);
+					}
+
+
+
+					return tempCarts;
+
+				}
+			});
+			return carts;
+		} 
+
+	}
+	
+	public Buyer recommendNewFollowers(final Database DB, final Categories categories, final String username){
 		final String query = "MATCH (n:Buyer {n.username: $username})->[:FOLLOWS]->(m)-[:FOLLOWS]->(s)"
 							+ "WHERE not (n)-[:FOLLOWS]-(s)"
 							+ "RETURN s";
@@ -373,7 +479,7 @@ public class Database implements AutoCloseable{
 			Buyer recommend = session.readTransaction(new TransactionWork<Buyer>(){
 				public Buyer execute(Transaction tx){
 					Result result = tx.run(query, parameters("username", username));
-					Buyer temp = new Buyer( DB, username, result.single().get("password").asString(),result.single().get("address").asString());
+					Buyer temp = new Buyer(DB, categories, username, result.single().get("password").asString(),result.single().get("address").asString());
 					return temp;
 				}
 			});

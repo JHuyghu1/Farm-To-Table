@@ -12,7 +12,6 @@ public class Product {
 	private int quantity;
 	Database DB;
 
-	// Constructor from Client
 	public Product(Database DB, int identity, String name, Category category, SubCategory subCategory, double price, int quantity) {
 		this.identity = identity;
 		this.name = name;
@@ -23,22 +22,9 @@ public class Product {
 		this.quantity = quantity;
 	}
 
-	// Constructor from DB
-	public Product(int id) {
-		//DB.findProduct(id);
-	}
-
-	// Copy constructor
-	public Product copy() {
-
-		return new Product(DB,identity, name, category, subCategory, price, quantity);
-
-	}
-
 	public int identity() {
 		return identity;
 	}
-
 
 	public Category category() {
 		return category;
@@ -63,12 +49,6 @@ public class Product {
 	public int quantity() {
 		return quantity;
 	}
-
-	//TODO: Update DB amount
-	public void restock(int amount) {
-		quantity += amount;
-	}
-
 
 	public String toString(boolean cartView, int totalInCart) {
 
