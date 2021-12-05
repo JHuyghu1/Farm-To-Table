@@ -9,6 +9,7 @@ public class Buyer {
 	private String address;
 	private ArrayList<Cart> purchaseHistory = new ArrayList<Cart>();
 	private ArrayList<Buyer> following = new ArrayList<Buyer>();
+	private ArrayList<Buyer> followers = new ArrayList<Buyer>();
 	Cart cart;
 	Database DB;
 	Categories categories;
@@ -47,8 +48,12 @@ public class Buyer {
 
 	public ArrayList<Buyer> following() {
 		return following;
-
 	}
+
+	public ArrayList<Buyer> followers() {
+		return followers;
+	}
+
 
 	public ArrayList<Cart> purchaseHistory() {
 		return purchaseHistory;

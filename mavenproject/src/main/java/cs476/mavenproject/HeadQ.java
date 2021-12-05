@@ -220,7 +220,7 @@ public class HeadQ {
 			selection = input.nextLine();
 			try{
 				poductId = Integer.parseInt(selection);
-				product = DB.findProduct(categories, DB, poductId);
+				product = DB.findProduct(DB, categories, poductId);
 				if(product == null) throw new Exception("Product doesn't exsits");
 				selection = "valid";
 			}catch(Exception e){
@@ -237,7 +237,7 @@ public class HeadQ {
 		String productInfo = "Product: " + product.name() + " | Current Inventory: " + quantity;
         System.out.println(productInfo);
 		Utils.underlineString(productInfo);
-		
+
 		while(selection != "valid"){
 			System.out.print("\nEnter Restock Amount: ");
 			selection = input.nextLine();

@@ -208,7 +208,7 @@ public class Database implements AutoCloseable{
 	}
 	
 	// By id
-	public Product findProduct(final Categories categories, final Database DB, final int id) {
+	public Product findProduct(final Database DB, final Categories categories, final int id) {
 		final String query = "MATCH (p:Product) WHERE id(p) = $id RETURN id(p) as id, p.name, p.category, p.subCategory, p.price, p.quantity";
 		
 		try(Session session = driver.session()){
@@ -231,7 +231,7 @@ public class Database implements AutoCloseable{
 	}
 
 	// By id
-	public Cart findCart(final Categories categories, final Database DB, final int id) {
+	public Cart findCart(final Database DB, final Categories categories, final int id) {
 		final String query = "MATCH (c:Cart) WHERE id(c) = $id RETURN c.owner, c.weight, c.cost, c.status";
 		
 		try(Session session = driver.session()){
@@ -267,39 +267,94 @@ public class Database implements AutoCloseable{
 		}
 	}
 
-	// -------- BUYER RELATIONSHIPS -------------
+	// -------- BUYER ACTIONS -------------
 
-	public void followUser(final String usernameA, final String usernameB ) {
-		  final String follower = "MATCH (a: Buyer) , (b:Buyer)  "
-		  		+ "WHERE  a.username = $usernameA AND b.username = $usernameB "
-		  		+ "CREATE (a)-[r:FOLLOWS]->(b)";
+	// user & target = buyer.username (return target)
+	public String followUser(final String user, final String target) {
+		  final String follower = "MATCH (u:Buyer), (t:Buyer) " +
+		  						  "WHERE  u.username = $user AND t.username = $target " +
+		  						  "CREATE (u)-[r:FOLLOWS]->(t) " +
+								  "RETURN t.username";
 		  try(Session session = driver.session()){
-			  String x = session.writeTransaction(new TransactionWork<String>() {
+			  String output = session.writeTransaction(new TransactionWork<String>() {
 				  public String execute(Transaction tx) {
-					  Result result = tx.run(follower, parameters("usernameA", usernameA, "usernameB", usernameB));
+					  Result result = tx.run(follower, parameters("user", user, "target", target));
 					  tx.commit();
-					  return result.single().get("id").asString();  
+					  return result.single().get("t.username").asString();  
 				  }
 			  });
-		  }														
-	  }
-	  
-	public void unfollowUser(final String usernameA, final String usernameB ) {
-		  final String follower = "MATCH (a: Buyer {username: $usernameA})-[r:FOLLOWS]->(b:Buyer {username: $usernameB}) "
-		  		+ "DELETE r";
-		  try(Session session = driver.session()){
-			  String x = session.writeTransaction(new TransactionWork<String>() {
-				  public String execute(Transaction tx) {
-					  Result result = tx.run(follower, parameters("usernameA", usernameA, "usernameB", usernameB));
-					  tx.commit();
-					  return result.single().get("id").asString();  
-				  }
-			  });
+			  return output;
 		  }														
 	  }
 	
-	// -------- BUYER QUERYS -------------
+	public String unfollowUser(final String user, final String target) {
+		final String follower = "MATCH (u:Buyer)-[r:FOLLOWS]->(t:Buyer) " +
+								"WHERE  u.username = $user AND t.username = $target " +
+								"DELETE r " +
+								"RETURN t.username";
+		try(Session session = driver.session()){
+			String output = session.writeTransaction(new TransactionWork<String>() {
+				public String execute(Transaction tx) {
+					Result result = tx.run(follower, parameters("user", user, "target", target));
+					tx.commit();
+					return result.single().get("t.username").asString();  
+				}
+			});
+			return output;
+		}														
+	}
+	
+	// Buyer -[r:FOLLOWS]-> Buyer(Current user)
+	public ArrayList<Buyer> getFollowers(final Database DB, final Categories categories, final String username){
+		final String query = "MATCH (t:Buyer)-[:FOLLOWS]->(u:Buyer) WHERE u.username = $username RETURN t.username as follower";
+		try(Session session = driver.session()){
+			ArrayList<Buyer> farms = session.readTransaction(new TransactionWork<ArrayList<Buyer>>(){
+				public ArrayList<Buyer> execute(Transaction tx){
 
+					ArrayList<Buyer> tempFollowers = new ArrayList<Buyer>();
+					Result result = tx.run(query, parameters("username", username));
+
+					while(result.hasNext()){
+						String followerUsername = result.next().get("follower").asString();
+						Buyer follower = findBuyer(DB, categories, followerUsername);
+
+						tempFollowers.add(follower);
+					}
+
+					return tempFollowers;
+
+				}
+			});
+			return farms;
+		} 
+	}
+	
+    // Buyer(Current user) -[r:FOLLOWS]-> Buyer
+	public ArrayList<Buyer> getFollowing(final Database DB, final Categories categories, final String username){
+		final String query = "MATCH (u:Buyer)-[:FOLLOWS]->(t:Buyer) WHERE u.username = $username RETURN t.username as following";
+		try(Session session = driver.session()){
+			ArrayList<Buyer> farms = session.readTransaction(new TransactionWork<ArrayList<Buyer>>(){
+				public ArrayList<Buyer> execute(Transaction tx){
+
+					ArrayList<Buyer> tempFollowers = new ArrayList<Buyer>();
+					Result result = tx.run(query, parameters("username", username));
+
+					while(result.hasNext()){
+						String followerUsername = result.next().get("following").asString();
+						Buyer follower = findBuyer(DB, categories, followerUsername);
+						
+						tempFollowers.add(follower);
+					}
+
+					return tempFollowers;
+
+				}
+			});
+			return farms;
+		} 
+	}
+
+	// Buyer -[r:CONTAINS]-> Cart
 	public ArrayList<Cart> getBuyerPurchaseHistory(final Database DB, final Categories categories, final String username ){
 
 		final String query = "MATCH (b:Buyer)-[:PURCHASED]->(c:Cart) WHERE b.username = $username RETURN id(c) as id";
@@ -313,7 +368,7 @@ public class Database implements AutoCloseable{
 					while(result.hasNext()){
 						Record record = result.next();
 						int cartId = record.get("id").asInt();
-						Cart foundCart = findCart(categories, DB, cartId);
+						Cart foundCart = findCart(DB, categories, cartId);
 						tempCarts.add(foundCart);
 					}
 
@@ -332,7 +387,7 @@ public class Database implements AutoCloseable{
 
 	// Return inventory for farm (username)
 	public ArrayList<Product> getFarmInventory(final Database DB, final Categories categories, final String username){
-		final String query = "MATCH (n:Farm)-[:SELLS]-(p:Product) WHERE n.username = $username RETURN id(p)";
+		final String query = "MATCH (n:Farm)-[:SELLS]->(p:Product) WHERE n.username = $username RETURN id(p)";
 		try(Session session = driver.session()){
 			ArrayList<Product> farms = session.readTransaction(new TransactionWork<ArrayList<Product>>(){
 				public ArrayList<Product> execute(Transaction tx){
@@ -341,7 +396,7 @@ public class Database implements AutoCloseable{
 					Result result = tx.run(query, parameters("username", username));
 
 					while(result.hasNext()){
-						tempInventory.add(findProduct(categories, DB, result.next().get(0).asInt()));
+						tempInventory.add(findProduct(DB, categories, result.next().get(0).asInt()));
 					}
 
 					return tempInventory;
@@ -389,7 +444,7 @@ public class Database implements AutoCloseable{
 					Result result = tx.run(query, parameters("subCategory", subCategory.name(), "username", username));
 
 					while(result.hasNext()){
-						tempInventory.add(findProduct(categories, DB, result.next().get(0).asInt()));
+						tempInventory.add(findProduct(DB, categories, result.next().get(0).asInt()));
 					}
 
 					return tempInventory;
@@ -454,7 +509,7 @@ public class Database implements AutoCloseable{
 						Record record = result.next();
 						int productId = record.get("id").asInt();
 						int productAmount = record.get("r.amount").asInt();
-						Product product = findProduct(categories, DB, productId);
+						Product product = findProduct(DB, categories, productId);
 
 						tempInventory.put(productId, new SimpleEntry<Product, Integer>(product, productAmount));
 
@@ -486,7 +541,7 @@ public class Database implements AutoCloseable{
 
 	}
 	
-	
+
 	public Buyer recommendNewFollowers(final Database DB, final Categories categories, final String username){
 		final String query = "MATCH (n:Buyer {n.username: $username})->[:FOLLOWS]->(m)-[:FOLLOWS]->(s)"
 							+ "WHERE not (n)-[:FOLLOWS]-(s)"

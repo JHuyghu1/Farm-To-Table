@@ -613,7 +613,7 @@ public class AppDriver {
 
             Utils.clearConsole();
 
-            Product selectedProduct = DB.findProduct(categories, DB, productId);
+            Product selectedProduct = DB.findProduct(DB, categories, productId);
 
             int poductId = selectedProduct.identity();
             int cartQuantity = mainBuyer.cart.contains(poductId);

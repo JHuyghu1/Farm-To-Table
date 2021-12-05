@@ -200,7 +200,7 @@ public class Cart {
 			int cartQuantity = v.getValue();
 
 			//Pull product quantity to get most uptodate quantity
-			Product updatedProduct = DB.findProduct(categories, DB, productId);
+			Product updatedProduct = DB.findProduct(DB, categories, productId);
 			int updatedProductQuanity = updatedProduct.quantity();
 
 			//Check if you have enough room
