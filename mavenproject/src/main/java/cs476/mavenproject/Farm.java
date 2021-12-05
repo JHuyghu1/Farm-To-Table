@@ -62,7 +62,8 @@ public class Farm {
 		if (inventory.size() > 0) {
 			if(withFarmName){
 				System.out.println("\nFarm: " + username );
-				System.out.println("-----" );
+				System.out.println("------");
+				Utils.underlineString(username);
 			}
 			for (Product product : inventory) {
 				System.out.println(product.toString(false, 0));

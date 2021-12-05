@@ -895,11 +895,8 @@ public class AppDriver {
         HeadQ.viewInventory();
 
         System.out.println("\n-------------------------------------------------------------------");
-        System.out.print("1 - Add Farm");
-        System.out.print(" | 2 - Add New Product");
-        System.out.print(" | 3 - Restock Product");
-        System.out.println(" | 4 - Back");
-        System.out.println("-------------------------------------------------------------------");
+        System.out.println("1 - Add Farm | 2 - Add New Product | 3 - Restock Product  | 4 - Back");
+        System.out.println("--------------------------------------------------------------------");
 
         System.out.print("\nYour selection: ");
         selection = input.nextLine();

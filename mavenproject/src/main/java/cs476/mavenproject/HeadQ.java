@@ -199,12 +199,8 @@ public class HeadQ {
 		}
 
 		//Add new product to DB
-		Product newProduct = DB.createProductNode(DB, name, category, subCategory, price, quantity);
+		DB.createProductNode(DB, name, category, subCategory, price, quantity, farm.name());
 		
-		//Connect the product to the farm
-		int idAsInt = newProduct.identity();
-		DB.addProductToFarm(farm.name(), idAsInt);
-
 		Utils.clearConsole();
 
 	}
@@ -238,10 +234,10 @@ public class HeadQ {
 		//pull current quantity
 		quantity = product.quantity();
 
-        System.out.println("Restock " + product.name());
-        System.out.println("-----------------");
-		System.out.println("Current Quantity: " + quantity);
-
+		String productInfo = "Product: " + product.name() + " | Current Inventory: " + quantity;
+        System.out.println(productInfo);
+		Utils.underlineString(productInfo);
+		
 		while(selection != "valid"){
 			System.out.print("\nEnter Restock Amount: ");
 			selection = input.nextLine();
