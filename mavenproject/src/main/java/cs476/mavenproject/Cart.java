@@ -52,6 +52,11 @@ public class Cart {
 		return payloadWeight;
 	}
 
+	public Double currentCost() {
+		return totalCost;
+	}
+
+
 	public int identity(){
 		return identity;
 	}
@@ -66,7 +71,7 @@ public class Cart {
 		Double productWeight = p.weight();
 		Double capcityLeft = Constants.WEIGHT_LIMIT - payloadWeight;
 
-		for(int i = 0; (maxQuantity*productWeight) < capcityLeft;  i++){
+		for(int i = 1; (i*productWeight) < capcityLeft;  i++){
 			maxQuantity = i;
 		}
 		return maxQuantity;
@@ -235,8 +240,11 @@ public class Cart {
 			}
 		} else {
 			
-			System.out.println("\nStatus: " + Utils.stringFromStatus(status));
-			System.out.println("------------------");
+			String statusString = Utils.stringFromStatus(status);
+			System.out.println("\nStatus: " + statusString);
+			System.out.print("--------");
+			Utils.underlineString(statusString);
+
 
 			products.forEach((k,v) -> {
 				System.out.println(v.getKey().toString(true, v.getValue()));

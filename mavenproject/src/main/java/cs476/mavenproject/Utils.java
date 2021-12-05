@@ -51,5 +51,12 @@ public class Utils {
 		}
 	}
 
+	public static void underlineString(String s){
+		for(int i = 0; i < s.length(); i++){
+            System.out.print('-');
+        }
+		System.out.println();
+	}
+
 
 }

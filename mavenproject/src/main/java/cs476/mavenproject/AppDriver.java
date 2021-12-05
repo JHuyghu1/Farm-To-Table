@@ -45,7 +45,7 @@ public class AppDriver {
                 Buyer buyerAuth = Login.loginBuyer();
                 if(buyerAuth != null){
                     mainBuyer = buyerAuth;
-                    buyerMain();
+                    buyerMainMenu();
                 } else {
                     login();
                 }
@@ -56,7 +56,7 @@ public class AppDriver {
                 Farm farmAuth = Login.loginFarm();
                 if(farmAuth != null){
                     mainFarm = farmAuth;
-                    farmMain();
+                    farmMainMenu();
                 } else {
                     login();
                 }
@@ -66,7 +66,7 @@ public class AppDriver {
                 Utils.clearConsole();
                 Boolean adminAuth = Login.loginAdmin();
                 if(adminAuth){
-                    adminMain();
+                    adminMainMenu();
                 } else {
                     login();
                 }
@@ -76,7 +76,7 @@ public class AppDriver {
                 Utils.clearConsole();
                 mainBuyer = Login.createNewUser();
                 Utils.clearConsole();
-                buyerMain();
+                buyerMainMenu();
                 break;
 
             default:
@@ -89,20 +89,20 @@ public class AppDriver {
 
     }
     
-    public void buyerMain() {
+    // ------- BUYER ACTIOINS ---------
+
+    public void buyerMainMenu() {
         String selection;
 
         System.out.println("Main Menu for: " + mainBuyer.username());
         System.out.print("---------------");
-        for(int i = 0; i < mainBuyer.username().length(); i++){
-            System.out.print('-');
-        }
-        System.out.println("\n1 - Search Users");
-        System.out.println("2 - Search Products");
-        System.out.println("3 - View following");
-        System.out.println("4 - View Cart");
-        System.out.println("5 - View History");
-        System.out.println("6 - Logout");
+        Utils.underlineString(mainBuyer.username());
+
+        System.out.println("1 - Users");
+        System.out.println("2 - Products");
+        System.out.println("3 - Cart");
+        System.out.println("4 - Purchase History");
+        System.out.println("5 - Logout");
 
 
         
@@ -110,36 +110,39 @@ public class AppDriver {
         selection = input.nextLine();
 
         switch(selection){
+
+            // View Users Menu
             case "1":
                 Utils.clearConsole();
-                buyerSearch("User");
+                buyerUserMenu();;
                 break;
 
+            // View Poduct Menu
             case "2":
                 Utils.clearConsole();
-                buyerSearch("Product");
+                buyerProductMenu();;
                 break;
             
+            // View Buyer Cart
             case "3":
-            break;
-
-            case "4":
                 Utils.clearConsole();
-                buyerCart();
+                buyerCartMenu();
                 break;
 
-            case "5":
+            // View Buyer Cart
+            case "4":
                 Utils.clearConsole();
                 if(mainBuyer.purchaseHistory().isEmpty()){
                     System.out.println("You havn't made a purchase yet!");
                     System.out.println("-------------------------------\n");
-                    buyerMain();    
+                    buyerMainMenu();    
                 } else {
                     buyerHistory();
                 }
                 break;
 
-            case "6":
+            // Logout
+            case "5":
                 Utils.clearConsole();
                 mainBuyer = null;
                 login();
@@ -148,19 +151,19 @@ public class AppDriver {
             default:
                 Utils.clearConsole();
                 System.out.println(selection + INVAL_SEL + '\n');
-                buyerMain();
+                buyerMainMenu();
 
         }
         
     }
 
-    public void buyerSearch(String type) {
+    public void buyerProductMenu() {
 
         String selection = "";
 
-        System.out.println(type + " Search");
-        System.out.println("---------------");
-        System.out.println("1 - Custom");
+        System.out.println("Product Menu");
+        System.out.println("------------");
+        System.out.println("1 - Custom Search");
         System.out.println("2 - Recomendations");
         System.out.println("3 - Back");
 
@@ -170,298 +173,614 @@ public class AppDriver {
 
         switch(selection){
             case "1":
-                if(type == "User"){
-
-                } else if (type == "Product"){
                     Utils.clearConsole();
-                    selection = "valid";
-                    searchProduct();
-                }
+                    buyerProductMenu_Search();
             break;
 
             case "2":
-                if(type == "User"){
-
-                } else if (type == "Product"){
-
-                }
             break;
         
             case "3":
                 Utils.clearConsole();
-                buyerMain();
+                buyerMainMenu();
                 break;
 
             default:
                 Utils.clearConsole();
                 System.out.println(selection + INVAL_SEL + '\n');
-                buyerSearch(type);
+                buyerProductMenu();
                 break;
         }
 
-    
-        
     }
 
-    public void buyerCart() {
-        
-        String selection = "";
+        // ------- PRODUCT MENU ---------
 
-        System.out.println("Your Cart");
-        System.out.print("---------\n");
+        // Search Product
+        public void buyerProductMenu_Search() {
+
+            String selection = "";
+            Category category = null;
+            SubCategory subCategory = null;
+
+            System.out.println("Choose a category | 0 - Back");
+            System.out.println("----------------------------");
+            System.out.println("1. Vegetables");
+            System.out.println("2. Fruits");
+            System.out.println("3. Herbs\n");
 
 
+            //Category Selection
+            while(selection != "valid"){
 
-        mainBuyer.cart.viewCart(true);
+                System.out.print("\nYour selection: ");
+                selection = input.nextLine();
 
-        System.out.println("\n---------------------------------------");
-        System.out.println("1 - Checkout | 2 - Edit Item | 3 - Back");
-        System.out.println("---------------------------------------");
+                switch(selection){
 
+                    case"0":
+                        Utils.clearConsole();                    
+                        buyerProductMenu();
+                        break;
 
-        System.out.print("\nYour Selection: ");
-        selection = input.nextLine();
+                    case"1":
+                        category = categories.vegetables;
+                        selection = "valid";
+                        break;
 
-        switch(selection){
-            case "1":
-            Utils.clearConsole();
-            if(mainBuyer.cart.isEmpty()){
-                System.out.println("No items to buy!");
-                System.out.println("-----------------\n");
-                buyerCart();
-                
-            } else {
-                int cartId = mainBuyer.cart.checkout(input, false);
-                Utils.clearConsole();
-                mainBuyer.cart = new Cart(DB, categories, mainBuyer.username());
-                mainBuyer.updatePurchaseHistory();
-                System.out.print("Your order number is " + cartId + "\n");
-                buyerMain();
-  
-            }
+                    case"2":
+                        category = categories.fruits;
+                        selection = "valid";
+                        break;
 
-            break;
+                    case"3":
+                        category = categories.herbs;
+                        selection = "valid";
+                        break;
 
-            case "2":
-                Utils.clearConsole();
-                if(mainBuyer.cart.isEmpty()){
-                    System.out.println("No items to edit!");
-                    System.out.println("-----------------\n");
+                    default:
+                        System.out.println("\n" + selection + " is an invalid selection!");
+                        break;
 
-                    buyerCart();
-
-                } else {
-                    buyerEditCartItem();    
                 }
-                break;
+            } // End - Category selction
+
+            Utils.clearConsole();
+
+            System.out.println("Choose a subcategory - " + category.name());
+            System.out.print("-----------------------");
+            Utils.underlineString(category.name());
             
-            case "3":
-                Utils.clearConsole();
-                buyerMain();
-                break;
+            category.viewSubCategories();
 
-            default:
-                Utils.clearConsole();
-                System.out.println(selection + INVAL_SEL);
-                buyerCart();
-                break;
-        }
+            selection = "";
+
+            //SubCategory Selection
+            while(selection != "valid"){
+                System.out.print("\nYour selection: ");
+                selection = input.nextLine();
+
+                try{
+                    int selctionInt = Integer.parseInt(selection);
+
+                    int numSubcategories = category.table.size();
+
+                    if( selctionInt < 0 || selctionInt > numSubcategories){
+                        System.out.println("\n" + selection + " is an invalid selection!");
+                    } else {
+                        subCategory = category.get(selctionInt);
+                        selection = "valid";
+                    }
+                    
+                }catch(Exception e){
+
+                    System.out.println("\n" + selection + " is an invalid selection!");
+                }
         
-    }
-
-    public void buyerHistory(){
-
-        System.out.println("Purchase History | Press enter to go back");
-        System.out.print("------------------------------------------\n");
-
-        mainBuyer.viewPurchaseHistory();
-        input.nextLine();
-
-        Utils.clearConsole();
-        buyerMain();
-
-    }
-   
-    public void buyerEditCartItem(){
-
-        String selection = "";
-        Boolean valid = false;
-
-        int productId = 0;
-
-        mainBuyer.cart.viewCart(false);
-
-        System.out.println("\n----------------------");
-        System.out.println("Choose an item to edit");
-        System.out.println("----------------------");
-
-        while(!valid){
-            System.out.print("Item ID: ");
-            selection = input.nextLine();
-
-            try{
-
-                productId = Integer.parseInt(selection);
-                if(mainBuyer.cart.contains(productId) < 1) throw new Exception("Product isn't in your cart!");
-                valid = true;
-
-            }catch(NumberFormatException e){
-                System.out.println("Enter an integer!");
-
-            }catch(Exception e){
-                System.out.println(e.getMessage());
             }
+
+            Utils.clearConsole();
+            
+            Boolean productFound = false;
+
+            //Used to add products to cart
+            ArrayList<Product> allProductsFound = new ArrayList<Product>();
+
+            //Search For Products
+            for(Farm farm : HeadQ.farms()){
+                ArrayList<Product> foundProducts = DB.customProductSearch(DB, categories, farm.name(), subCategory);
+                if(!foundProducts.isEmpty()){
+                    productFound = true;
+                    System.out.println("Farm: " + farm.name());
+                    System.out.print("------");
+                    Utils.underlineString(farm.name());
+                    
+                    for(Product p: foundProducts){
+                        allProductsFound.add(p);
+                        System.out.println(p.toString(false, mainBuyer.cart.contains(p.identity())));
+                    }
+                }
+            }
+
+            //If no products found start a new search
+            if(!productFound){
+                Utils.clearConsole();
+                System.out.println("No product found try again!\n");
+                buyerProductMenu_Search();
+
+            } else {
+                search_productOptions(subCategory);
+            }
+
         }
 
-        Utils.clearConsole();
+        public void search_productOptions(SubCategory subCategory){
 
-        Product selectedProduct = DB.findProduct(categories, DB, productId);
+            String selection = "";
 
-        int poductId = selectedProduct.identity();
-        int cartQuantity = mainBuyer.cart.contains(poductId);
-        int productQuantity = selectedProduct.quantity() - cartQuantity;
-        int maxQuantity = mainBuyer.cart.maxQuantity(selectedProduct);
+            System.out.println("\n---------------------------------------------------");
+            System.out.println("1 - Add product to cart | 2 - New Search | 3 - Home");
+            System.out.println("---------------------------------------------------");
+
+            while(selection != "valid"){
+
+                System.out.print("Your selectioin: ");
+                selection = input.nextLine();
+
+                switch(selection){
+                    case "1":
+                        Utils.clearConsole();
+                        selection = "valid";
+                        productOptions_addToCart(subCategory);                    
+                        break;
+                    
+                    case "2":
+                        Utils.clearConsole();
+                        selection = "valid";
+                        buyerProductMenu();
+                        break;
+                    
+                    case "3":
+                        Utils.clearConsole();
+                        selection = "valid";
+                        buyerMainMenu();
+                        break;
 
 
-        mainBuyer.cart.printProduct(productId);
+                    default:
+                    System.out.println(selection + INVAL_SEL);
+                    break;
+                }
 
-        System.out.println("\n------------------------------------------------------");
-        System.out.println("1 - Increase Quantity | 2 - Decrease Quantity | 3 - Back");
-        System.out.println("--------------------------------------------------------\n");
+            }
 
-        valid = false;
+        }
 
-        while(!valid){
-            System.out.print("Your Selection: ");
+        public void productOptions_addToCart(SubCategory subCategory){
+            
+            //Used to add products to cart
+            ArrayList<Product> allProductsFound = new ArrayList<Product>();
+
+            //Search For Products
+            for(Farm farm : HeadQ.farms()){
+                ArrayList<Product> foundProducts = DB.customProductSearch(DB, categories, farm.name(), subCategory);
+                if(!foundProducts.isEmpty()){
+                    System.out.println("Farm: " + farm.name());
+                    System.out.print("------");
+                    Utils.underlineString(farm.name());
+                    
+                    for(Product p: foundProducts){
+                        allProductsFound.add(p);
+                        System.out.println(p.toString(false, mainBuyer.cart.contains(p.identity())));
+                    }
+                }
+            }
+
+            String capacityString = mainBuyer.cart.currentWeight() + "/" + Constants.WEIGHT_LIMIT + " grams";
+            
+            System.out.print("\n------------------------------------");
+            Utils.underlineString(capacityString);
+            System.out.println("Select the product | " + "Cart Capacity: " + capacityString);
+            System.out.print("------------------------------------");
+            Utils.underlineString(capacityString);
+            
+
+            String selection = "";
+
+            int quantity = 0;
+            Product selectedProduct = null;
+            int maxQuantity = 0;
+
+            while(selection != "valid"){
+
+                System.out.print("Product ID: ");
+                selection = input.nextLine();
+
+                try{
+                    int productId = Integer.parseInt(selection);
+                    if(!allProductsFound.stream().anyMatch(p -> productId == p.identity())) throw new Exception("Product not in search results!");
+                    selectedProduct = allProductsFound.stream().filter(p -> p.identity() == productId).findFirst().orElse(null);
+                    
+                    maxQuantity = mainBuyer.cart.maxQuantity(selectedProduct);
+
+                    if(maxQuantity < 1) throw new Exception("You don't have enough room for that product!");
+
+                    selection = "valid";
+                }catch(NumberFormatException e){
+                    System.out.println("Enter an integer!");
+                    
+                }catch(Exception e){
+                    System.out.println(e.getMessage());
+                }
+
+            }
+
+            selection="";
+
+            while(selection != "valid"){
+                System.out.print("Quantity: ");
+                selection = input.nextLine();
+
+                if(selectedProduct != null)
+                    try{
+
+                        int tempQuantity = Integer.parseInt(selection);
+                        if(tempQuantity < 1) throw new Exception("Enter a quantity greater then 0!");
+                        if(tempQuantity < 1 || tempQuantity > selectedProduct.quantity()) throw new Exception("Not enough quantity!");
+                        if(tempQuantity > maxQuantity) throw new Exception("You only have enough room for " + maxQuantity + "!");
+
+                        quantity = tempQuantity;
+
+                        selection = "valid";
+            
+                    }catch(NumberFormatException e){
+                        System.out.println("Enter an integer!");
+
+                    }catch(Exception e){
+
+                        System.out.println(e.getMessage());
+            
+                    }
+            }
+
+            mainBuyer.cart.add(selectedProduct, quantity);
+
+            Utils.clearConsole();
+
+            if(quantity > 1){
+                System.out.println("Products added to cart!\n");
+            } else {
+                System.out.println("Product added to cart!\n");
+            }
+
+            buyerMainMenu();
+
+        }
+
+        // ------- USER MENU ---------
+
+        public void buyerUserMenu() {
+
+            String selection = "";
+
+            System.out.println("User Menu");
+            System.out.println("---------");
+            System.out.println("1 - Custom Search");
+            System.out.println("2 - Recomendations");
+            System.out.println("3 - Following");
+            System.out.println("4 - Followers");
+            System.out.println("5 - Back");
+
+
+            System.out.print("\nYour selection: ");
             selection = input.nextLine();
 
             switch(selection){
-                case"1":
-                if(productQuantity - cartQuantity < 1){
-                    System.out.println("No product available to to add");
-
-                } else if(maxQuantity == 0){
-                    System.out.println("Not enough capacity left");
-
-                }else {
-                    Utils.clearConsole();
-                    increaseCartItem(selectedProduct);
-                    valid = true;
-                }
+                case "1":
                 break;
 
-                case"2":
-                    Utils.clearConsole();
-                    decreaseCartItem(selectedProduct);
-                    break;
+                case "2":
+                break;
 
-                case"3":
+                case "3":
+                break;
+
+                case "4":
+                break;
+            
+                case "5":
                     Utils.clearConsole();
-                    buyerEditCartItem();
+                    buyerMainMenu();
                     break;
 
                 default:
-                    System.out.println(selection + INVAL_SEL);
+                    Utils.clearConsole();
+                    System.out.println(selection + INVAL_SEL + '\n');
+                    buyerUserMenu();
+                    break;
+            }
+
+        
+            
+        }
+
+        // ------- BUYER CART ---------
+
+        public void buyerCartMenu() {
+            
+            String selection = "";
+
+            String capacityString = mainBuyer.cart.currentWeight() + "/" + Constants.WEIGHT_LIMIT + " grams";
+            String cartInfo = "Capacity: " + capacityString + " | Total Cost: $" + mainBuyer.cart.currentCost();
+
+            System.out.println("Your Cart | " + cartInfo);
+            System.out.print("------------");
+            Utils.underlineString(cartInfo);
+            System.out.println();
+
+
+
+            mainBuyer.cart.viewCart(true);
+
+            System.out.println("\n---------------------------------------");
+            System.out.println("1 - Checkout | 2 - Edit Item | 3 - Back");
+            System.out.println("---------------------------------------");
+
+
+            System.out.print("\nYour Selection: ");
+            selection = input.nextLine();
+
+            switch(selection){
+                case "1":
+                Utils.clearConsole();
+                if(mainBuyer.cart.isEmpty()){
+                    System.out.println("No items to buy!");
+                    System.out.println("-----------------\n");
+                    buyerCartMenu();
+                    
+                } else {
+                    int cartId = mainBuyer.cart.checkout(input, false);
+                    Utils.clearConsole();
+                    mainBuyer.cart = new Cart(DB, categories, mainBuyer.username());
+                    mainBuyer.updatePurchaseHistory();
+                    System.out.print("Your order number is " + cartId + "\n");
+                    buyerMainMenu();
+    
+                }
+
+                break;
+
+                case "2":
+                    Utils.clearConsole();
+                    if(mainBuyer.cart.isEmpty()){
+                        System.out.println("No items to edit!");
+                        System.out.println("-----------------\n");
+
+                        buyerCartMenu();
+
+                    } else {
+                        buyerCartMenu_Edit();    
+                    }
+                    break;
+                
+                case "3":
+                    Utils.clearConsole();
+                    buyerMainMenu();
                     break;
 
-
+                default:
+                    Utils.clearConsole();
+                    System.out.println(selection + INVAL_SEL);
+                    buyerCartMenu();
+                    break;
             }
-
+            
         }
-
-    }
     
-    public void increaseCartItem(Product product){
+        public void buyerCartMenu_Edit(){
 
-        boolean valid = false;
-        String selection = "";
-        int increaseBy = 0;
+            String selection = "";
+            Boolean valid = false;
 
-        int poductId = product.identity();
-        int cartQuantity = mainBuyer.cart.contains(poductId);
-        int productQuantity = product.quantity() - cartQuantity;
-        int maxQuantity = mainBuyer.cart.maxQuantity(product);
+            int productId = 0;
 
-        System.out.println("\nIn your Cart: " + cartQuantity);
-        System.out.println("-------------");
+            System.out.println("Your Cart");
+            System.out.print("---------\n");
 
-        System.out.println("\nAvailable: " + productQuantity);
-        System.out.println("---------");
+            mainBuyer.cart.viewCart(true);
 
-        while(!valid){
-            System.out.print("\nIncrease quantity by: ");
-            try{
+            System.out.println("\n----------------------");
+            System.out.println("Choose an item to edit");
+            System.out.println("----------------------");
+
+            while(!valid){
+                System.out.print("Item ID: ");
                 selection = input.nextLine();
-                increaseBy = Integer.parseInt(selection);
-                if(increaseBy < 1) throw new Exception("Enter a number greater then 0!");
-                if(increaseBy > maxQuantity) throw new Exception("You can only add up to " + maxQuantity + "more!");
-                if(increaseBy > productQuantity) throw new Exception("Not enough product available");
 
-                valid = true;
+                try{
 
-            }catch(NumberFormatException e){
-                System.out.println("Enter an integer!");
+                    productId = Integer.parseInt(selection);
+                    if(mainBuyer.cart.contains(productId) < 1) throw new Exception("Product isn't in your cart!");
+                    valid = true;
 
-            }catch(Exception e){
-                System.out.println(e.getMessage());
+                }catch(NumberFormatException e){
+                    System.out.println("Enter an integer!");
+
+                }catch(Exception e){
+                    System.out.println(e.getMessage());
+                }
+            }
+
+            Utils.clearConsole();
+
+            Product selectedProduct = DB.findProduct(categories, DB, productId);
+
+            int poductId = selectedProduct.identity();
+            int cartQuantity = mainBuyer.cart.contains(poductId);
+            int productQuantity = selectedProduct.quantity() - cartQuantity;
+            int maxQuantity = mainBuyer.cart.maxQuantity(selectedProduct);
+
+
+            System.out.println("Chosen Product");
+            System.out.print("--------------\n");
+
+            mainBuyer.cart.printProduct(productId);
+
+            System.out.println("\n--------------------------------------------------------");
+            System.out.println("1 - Increase Quantity | 2 - Decrease Quantity | 3 - Back");
+            System.out.println("--------------------------------------------------------\n");
+
+            valid = false;
+
+            while(!valid){
+                System.out.print("Your Selection: ");
+                selection = input.nextLine();
+
+                switch(selection){
+                    case"1":
+                    if(productQuantity - cartQuantity < 1){
+                        System.out.println("No product available to to add");
+
+                    } else if(maxQuantity == 0){
+                        System.out.println("Not enough capacity left");
+
+                    }else {
+                        Utils.clearConsole();
+                        buyerCartMenu_Edit_Increase(selectedProduct);
+                        valid = true;
+                    }
+                    break;
+
+                    case"2":
+                        Utils.clearConsole();
+                        buyerCartMenu_Edit_Decrease(selectedProduct);
+                        break;
+
+                    case"3":
+                        Utils.clearConsole();
+                        buyerCartMenu_Edit();
+                        break;
+
+                    default:
+                        System.out.println(selection + INVAL_SEL);
+                        break;
+
+
+                }
 
             }
+
         }
+        
+        public void buyerCartMenu_Edit_Increase(Product product){
 
-        mainBuyer.cart.add(product, increaseBy);
+            boolean valid = false;
+            String selection = "";
+            int increaseBy = 0;
 
-        Utils.clearConsole();
-        System.out.println("Increase item: ID" + poductId + " by " + increaseBy + "!\n");
-        buyerCart();
+            int poductId = product.identity();
+            int cartQuantity = mainBuyer.cart.contains(poductId);
+            int productQuantity = product.quantity() - cartQuantity;
+            int maxQuantity = mainBuyer.cart.maxQuantity(product);
 
-    }
-    
-    public void decreaseCartItem(Product product){
+            System.out.println("\nIn your Cart: " + cartQuantity);
+            System.out.print("--------------");
+            Utils.underlineString(Integer.toString(cartQuantity));
 
-        boolean valid = false;
-        String selection = "";
-        int deacreaseBy = 0;
+            System.out.println("\nAvailable: " + productQuantity);
+            System.out.print("-----------");
+            Utils.underlineString(Integer.toString(productQuantity));
 
+            while(!valid){
+                System.out.print("\nIncrease quantity by: ");
+                try{
+                    selection = input.nextLine();
+                    increaseBy = Integer.parseInt(selection);
+                    if(increaseBy < 1) throw new Exception("Enter a number greater then 0!");
+                    if(increaseBy > maxQuantity) throw new Exception("You can only add up to " + maxQuantity + " more!");
+                    if(increaseBy > productQuantity) throw new Exception("Not enough product available");
 
-        int poductId = product.identity();
-        int cartQuantity = mainBuyer.cart.contains(poductId);
+                    valid = true;
 
-        System.out.println("\nIn your Cart: " + cartQuantity);
-        System.out.println("-------------");
+                }catch(NumberFormatException e){
+                    System.out.println("Enter an integer!");
 
-        while(!valid){
-            System.out.print("\nDeacrease quantity by: ");
-            try{
-                selection = input.nextLine();
-                deacreaseBy = Integer.parseInt(selection);
-                if(deacreaseBy < 1) throw new Exception("Enter a number greater then 0!");
-                if(deacreaseBy > cartQuantity) deacreaseBy = cartQuantity;
-                valid = true;
+                }catch(Exception e){
+                    System.out.println(e.getMessage());
 
-            }catch(NumberFormatException e){
-                System.out.println("Enter an integer!");
-
-            }catch(Exception e){
-                System.out.println(e.getMessage());
-
+                }
             }
+
+            mainBuyer.cart.add(product, increaseBy);
+
+            Utils.clearConsole();
+            System.out.println("Increased Quantity! ID: " + poductId + " +" + increaseBy + "\n");
+            buyerCartMenu();
+
+        }
+        
+        public void buyerCartMenu_Edit_Decrease(Product product){
+
+            boolean valid = false;
+            String selection = "";
+            int deacreaseBy = 0;
+
+
+            int poductId = product.identity();
+            int cartQuantity = mainBuyer.cart.contains(poductId);
+
+            System.out.println("\nIn your Cart: " + cartQuantity);
+            System.out.println("-------------");
+
+            while(!valid){
+                System.out.print("\nDeacrease quantity by: ");
+                try{
+                    selection = input.nextLine();
+                    deacreaseBy = Integer.parseInt(selection);
+                    if(deacreaseBy < 1) throw new Exception("Enter a number greater then 0!");
+                    if(deacreaseBy > cartQuantity) deacreaseBy = cartQuantity;
+                    valid = true;
+
+                }catch(NumberFormatException e){
+                    System.out.println("Enter an integer!");
+
+                }catch(Exception e){
+                    System.out.println(e.getMessage());
+
+                }
+            }
+
+            mainBuyer.cart.remove(product, deacreaseBy);
+
+            Utils.clearConsole();
+
+            if(deacreaseBy == cartQuantity){
+                System.out.println("Removed! ID: " + poductId + '\n');
+            } else {
+                System.out.println("Decreased Quantity! ID:" + poductId + " -" + deacreaseBy + '\n');
+            }
+
+            buyerCartMenu();
+
         }
 
-        mainBuyer.cart.remove(product, deacreaseBy);
+        // ------- PURCHASE HISTORY ---------
 
-        Utils.clearConsole();
+        public void buyerHistory(){
 
-        if(deacreaseBy == cartQuantity){
-            System.out.println("Removed item: ID" + poductId + '\n');
-        } else {
-            System.out.println("Decrease item: ID" + poductId + " by " + deacreaseBy + '\n');
+            System.out.println("Purchase History | Press ENTER to go back");
+            System.out.print("------------------------------------------\n");
+
+            mainBuyer.viewPurchaseHistory();
+            input.nextLine();
+
+            Utils.clearConsole();
+            buyerMainMenu();
+
         }
-
-        buyerCart();
-
-    }
-
-    public void farmMain(){
+            
+    // ------- FARM ACTIOINS ---------
+    public void farmMainMenu(){
 
         String selection;
 
@@ -478,7 +797,7 @@ public class AppDriver {
         switch(selection){
             case "1":
                 Utils.clearConsole();
-                farmInventory();
+                farmMainMenu_Inventory();
                 break;
 
             case "2":
@@ -497,13 +816,13 @@ public class AppDriver {
             default:
                 Utils.clearConsole();
                 System.out.println(selection + INVAL_SEL);
-                farmMain();
+                farmMainMenu();
 
         }
 
     }
     
-    public void farmInventory(){
+    public void farmMainMenu_Inventory(){
         String selection = "";
 
         System.out.println("Your Inventory | 1 - Back");
@@ -520,7 +839,7 @@ public class AppDriver {
             switch(selection){
                 case "1":
                     Utils.clearConsole();
-                    farmMain();
+                    farmMainMenu();
                     selection = "valid";
                     break;
 
@@ -532,7 +851,8 @@ public class AppDriver {
 
     }
     
-    public void adminMain() {
+    // ------- ADMIN ACTIONS ---------
+    public void adminMainMenu() {
         String selection;
 
         System.out.println("Admin Menu");
@@ -550,7 +870,7 @@ public class AppDriver {
 
             case "2":
             Utils.clearConsole();
-            adminInventory();
+            adminMainMenu_Inventory();
             break;
             
             case "3":
@@ -561,13 +881,13 @@ public class AppDriver {
             default:
             Utils.clearConsole();
             System.out.println(selection + INVAL_SEL);
-            adminMain();
+            adminMainMenu();
 
         }
         
     }
 
-    public void adminInventory() {
+    public void adminMainMenu_Inventory() {
         String selection;
 
         System.out.println("Head Quarters Inventory");
@@ -588,282 +908,34 @@ public class AppDriver {
             case "1":
                 Utils.clearConsole();
                 HeadQ.createNewFarm();
-                adminInventory();
+                adminMainMenu_Inventory();
                 break;
 
             case "2":
                 Utils.clearConsole();
                 HeadQ.createProduct();
-                adminInventory();
+                adminMainMenu_Inventory();
                 break;
             
             case "3":
                 Utils.clearConsole();
                 HeadQ.viewInventory();
                 HeadQ.restockProduct();
-                adminInventory();
+                adminMainMenu_Inventory();
                 break;
 
             case "4":
                 Utils.clearConsole();
-                adminMain();
+                adminMainMenu();
                 break;
 
             default:
                 Utils.clearConsole();
                 System.out.println(selection + INVAL_SEL);
-                adminInventory();
+                adminMainMenu_Inventory();
 
         }
         
-    }
-
-    public void searchProduct() {
-
-        String selection = "";
-        Category category = null;
-        SubCategory subCategory = null;
-
-        System.out.println("Choose a category | 0 - Back");
-		System.out.println("----------------------------");
-		System.out.println("1. Vegetables");
-		System.out.println("2. Fruits");
-		System.out.println("3. Herbs\n");
-
-
-		//Category Selection
-		while(selection != "valid"){
-
-			System.out.print("\nYour selection: ");
-			selection = input.nextLine();
-
-			switch(selection){
-
-                case"0":
-                    Utils.clearConsole();                    
-                    buyerSearch("product");
-                    break;
-
-				case"1":
-					category = categories.vegetables;
-					selection = "valid";
-					break;
-
-				case"2":
-					category = categories.fruits;
-					selection = "valid";
-					break;
-
-				case"3":
-					category = categories.herbs;
-					selection = "valid";
-					break;
-
-				default:
-					System.out.println("\n" + selection + " is an invalid selection!");
-					break;
-
-			}
-		} // End - Category selction
-
-		Utils.clearConsole();
-
-		System.out.println("Choose a subcategory - " + category.name());
-		System.out.println("--------------------");
-		category.viewSubCategories();
-
-		selection = "";
-
-		//SubCategory Selection
-		while(selection != "valid"){
-			System.out.print("\nYour selection: ");
-			selection = input.nextLine();
-
-			try{
-				int selctionInt = Integer.parseInt(selection);
-
-				int numSubcategories = category.table.size();
-
-				if( selctionInt < 0 || selctionInt > numSubcategories){
-					System.out.println("\n" + selection + " is an invalid selection!");
-				} else {
-					subCategory = category.get(selctionInt);
-					selection = "valid";
-				}
-				
-			}catch(Exception e){
-
-				System.out.println("\n" + selection + " is an invalid selection!");
-			}
-	
-		}
-
-        Utils.clearConsole();
-        
-        Boolean productFound = false;
-
-        //Used to add products to cart
-        ArrayList<Product> allProductsFound = new ArrayList<Product>();
-
-        //Search For Products
-        for(Farm farm : HeadQ.farms()){
-            ArrayList<Product> foundProducts = DB.customProductSearch(DB, categories, farm.name(), subCategory);
-            if(!foundProducts.isEmpty()){
-                productFound = true;
-                System.out.println("Farm: " + farm.name());
-                System.out.println("-----");
-                for(Product p: foundProducts){
-                    allProductsFound.add(p);
-                    System.out.println(p.toString(false, mainBuyer.cart.contains(p.identity())));
-                }
-            }
-        }
-
-        //If no products found start a new search
-        if(!productFound){
-            Utils.clearConsole();
-            System.out.println("No product found try again!\n");
-            searchProduct();
-
-        } else {
-            productOptions(subCategory);
-        }
-
-    }
-
-    public void productOptions(SubCategory subCategory){
-
-        String selection = "";
-
-        System.out.println("\n---------------------------------------------------");
-        System.out.println("1 - Add product to cart | 2 - New Search | 3 - Home");
-        System.out.println("---------------------------------------------------");
-
-        while(selection != "valid"){
-
-            System.out.print("Your selectioin: ");
-            selection = input.nextLine();
-
-            switch(selection){
-                case "1":
-                    Utils.clearConsole();
-                    selection = "valid";
-                    addToCart(subCategory);                    
-                    break;
-                
-                case "2":
-                    Utils.clearConsole();
-                    selection = "valid";
-                    buyerSearch("product");
-                    break;
-                
-                case "3":
-                    Utils.clearConsole();
-                    selection = "valid";
-                    buyerMain();
-                    break;
-
-
-                default:
-                System.out.println(selection + INVAL_SEL);
-                break;
-            }
-
-        }
-
-    }
-
-    public void addToCart(SubCategory subCategory){
-        
-        //Used to add products to cart
-        ArrayList<Product> allProductsFound = new ArrayList<Product>();
-
-        //Search For Products
-        for(Farm farm : HeadQ.farms()){
-            ArrayList<Product> foundProducts = DB.customProductSearch(DB, categories, farm.name(), subCategory);
-            if(!foundProducts.isEmpty()){
-                System.out.println("Farm: " + farm.name());
-                System.out.println("-----");
-                for(Product p: foundProducts){
-                    allProductsFound.add(p);
-                    System.out.println(p.toString(false, mainBuyer.cart.contains(p.identity())));
-                }
-            }
-        }
-
-        System.out.println("\n------------------");
-        System.out.println("Select the product | " + "Cart Capacity: " + mainBuyer.cart.currentWeight() + "/" + Constants.WEIGHT_LIMIT + " grams");
-        System.out.println("------------------");
-
-        String selection = "";
-
-        int quantity = 0;
-        Product selectedProduct = null;
-        int maxQuantity = 0;
-
-        while(selection != "valid"){
-
-            System.out.print("Product ID: ");
-            selection = input.nextLine();
-
-            try{
-                int productId = Integer.parseInt(selection);
-                if(!allProductsFound.stream().anyMatch(p -> productId == p.identity())) throw new Exception("Product not in search results!");
-                selectedProduct = allProductsFound.stream().filter(p -> p.identity() == productId).findFirst().orElse(null);
-                maxQuantity = mainBuyer.cart.maxQuantity(selectedProduct);
-
-                if(maxQuantity < 1) throw new Exception("You don't have enough room for that product!");
-
-                selection = "valid";
-            }catch(NumberFormatException e){
-                System.out.println("Enter an integer!");
-                
-            }catch(Exception e){
-                System.out.println(e.getMessage());
-            }
-
-        }
-
-        selection="";
-
-        while(selection != "valid"){
-            System.out.print("Quantity: ");
-            selection = input.nextLine();
-
-            if(selectedProduct != null)
-                try{
-
-                    int tempQuantity = Integer.parseInt(selection);
-                    if(tempQuantity < 1) throw new Exception("Enter a quantity greater then 0!");
-                    if(tempQuantity < 1 || tempQuantity > selectedProduct.quantity()) throw new Exception("Not enough quantity!");
-                    if(tempQuantity > maxQuantity) throw new Exception("You only have enough room for " + maxQuantity + "!");
-
-                    quantity = tempQuantity;
-
-                    selection = "valid";
-        
-                }catch(NumberFormatException e){
-                    System.out.println("Enter an integer!");
-
-                }catch(Exception e){
-
-                    System.out.println(e.getMessage());
-        
-                }
-        }
-
-        mainBuyer.cart.add(selectedProduct, quantity);
-
-        Utils.clearConsole();
-
-        if(quantity > 1){
-            System.out.println("Products added to cart!\n");
-        } else {
-            System.out.println("Product added to cart!\n");
-        }
-
-        buyerMain();
-
     }
 
 }
