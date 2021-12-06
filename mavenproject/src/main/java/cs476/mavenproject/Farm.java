@@ -1,11 +1,13 @@
 package cs476.mavenproject;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 
 public class Farm {
 	private String username;
 	private String password;
-	private ArrayList<Product> inventory = new ArrayList<Product>();
+	private Map<Integer,Product> inventory = new HashMap<Integer,Product>();
 	private ArrayList<Product> soldHistory = new ArrayList<Product>();
 	Database DB;
 	Categories categories;
@@ -36,10 +38,6 @@ public class Farm {
 		inventory = DB.getFarmInventory(DB, categories, username);
 	}
 
-	public ArrayList<Product> inventory() {
-		return inventory;
-	}
-
 	public ArrayList<Product> soldHistory() {
 		return soldHistory;
 	}
@@ -54,25 +52,29 @@ public class Farm {
 
 	}
 
-	public void viewInventory(Boolean withFarmName) {
+	public void viewInventory() {
 
 		pullInventory();
 
-		
-		if (inventory.size() > 0) {
-			if(withFarmName){
-				System.out.println("\nFarm: " + username );
-				System.out.println("------");
-				Utils.underlineString(username);
-			}
-			for (Product product : inventory) {
-				System.out.println(product.toString(false, 0));
-				System.out.println("-");
+		if(inventory.isEmpty()){
+			System.out.println("No Inventory");
 
-			}
-			
+		} else {
+
+			inventory.forEach((id, product) -> {
+				System.out.println(product.toString(false, 0));
+			} );
 		}
 
 	}
 
+	public boolean carriesProduct(int id){
+		return inventory.containsKey(id);
+	}
+
+	public Product getProduct(int id){
+		return inventory.get(id);
+	}
+
 }
+

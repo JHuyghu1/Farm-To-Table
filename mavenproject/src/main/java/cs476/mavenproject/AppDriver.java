@@ -1,11 +1,7 @@
 package cs476.mavenproject;
 
-import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Scanner;
-
-import org.omg.DynamicAny.DynAny;
-
 import cs476.mavenproject.Categories.Category;
 
 public class AppDriver {
@@ -20,6 +16,11 @@ public class AppDriver {
 
     static String INVAL_SEL = " is an invalid selction!";
 
+    private enum ListType {
+        FOLLOWING,
+        FOLLOWERS,
+        SEARCH
+    }
     public AppDriver(Database DB, Scanner input){
         this.DB = DB;
         this.input = input;
@@ -92,7 +93,7 @@ public class AppDriver {
 
     }
     
-    // ------- BUYER ACTIOINS ---------
+    // ------- BUYER ---------
 
     private void buyerMainMenu() {
         String selection;
@@ -135,6 +136,7 @@ public class AppDriver {
             // View Buyer Cart
             case "4":
                 Utils.clearConsole();
+                mainBuyer.updatePurchaseHistory();
                 if(mainBuyer.purchaseHistory().isEmpty()){
                     System.out.println("You havn't made a purchase yet!");
                     System.out.println("-------------------------------\n");
@@ -160,307 +162,272 @@ public class AppDriver {
         
     }
 
-    private void buyerProductMenu() {
+        // ------- PRODUCT ACTIONS MENU ---------
 
-        String selection = "";
+            private void buyerProductMenu() {
 
-        System.out.println("Product Menu");
-        System.out.println("------------");
-        System.out.println("1 - Custom Search");
-        System.out.println("2 - Recomendations");
-        System.out.println("3 - Back");
-
-
-        System.out.print("\nYour selection: ");
-        selection = input.nextLine();
-
-        switch(selection){
-            case "1":
-                    Utils.clearConsole();
-                    buyerProductMenu_Search();
-            break;
-
-            case "2":
-            break;
+                String selection = "";
         
-            case "3":
-                Utils.clearConsole();
-                buyerMainMenu();
-                break;
-
-            default:
-                Utils.clearConsole();
-                System.out.println(selection + INVAL_SEL + '\n');
-                buyerProductMenu();
-                break;
-        }
-
-    }
-
-        // ------- PRODUCT MENU ---------
-
-        // Search Product
-        private void buyerProductMenu_Search() {
-
-            String selection = "";
-            Category category = null;
-            SubCategory subCategory = null;
-
-            System.out.println("Choose a category | 0 - Back");
-            System.out.println("----------------------------");
-            System.out.println("1. Vegetables");
-            System.out.println("2. Fruits");
-            System.out.println("3. Herbs\n");
-
-
-            //Category Selection
-            while(selection != "valid"){
-
+                System.out.println("Product Menu");
+                System.out.println("------------");
+                System.out.println("1 - Search");
+                System.out.println("2 - Recomendations");
+                System.out.println("3 - Back");
+        
+        
                 System.out.print("\nYour selection: ");
                 selection = input.nextLine();
-
-                switch(selection){
-
-                    case"0":
-                        Utils.clearConsole();                    
-                        buyerProductMenu();
-                        break;
-
-                    case"1":
-                        category = categories.vegetables;
-                        selection = "valid";
-                        break;
-
-                    case"2":
-                        category = categories.fruits;
-                        selection = "valid";
-                        break;
-
-                    case"3":
-                        category = categories.herbs;
-                        selection = "valid";
-                        break;
-
-                    default:
-                        System.out.println("\n" + selection + " is an invalid selection!");
-                        break;
-
-                }
-            } // End - Category selction
-
-            Utils.clearConsole();
-
-            System.out.println("Choose a subcategory - " + category.name());
-            System.out.print("-----------------------");
-            Utils.underlineString(category.name());
-            
-            category.viewSubCategories();
-
-            selection = "";
-
-            //SubCategory Selection
-            while(selection != "valid"){
-                System.out.print("\nYour selection: ");
-                selection = input.nextLine();
-
-                try{
-                    int selctionInt = Integer.parseInt(selection);
-
-                    int numSubcategories = category.table.size();
-
-                    if( selctionInt < 0 || selctionInt > numSubcategories){
-                        System.out.println("\n" + selection + " is an invalid selection!");
-                    } else {
-                        subCategory = category.get(selctionInt);
-                        selection = "valid";
-                    }
-                    
-                }catch(Exception e){
-
-                    System.out.println("\n" + selection + " is an invalid selection!");
-                }
         
-            }
-
-            Utils.clearConsole();
-            
-            Boolean productFound = false;
-
-            //Used to add products to cart
-            ArrayList<Product> allProductsFound = new ArrayList<Product>();
-
-            //Search For Products
-            for(Farm farm : HeadQ.farms()){
-                ArrayList<Product> foundProducts = DB.customProductSearch(DB, categories, farm.name(), subCategory);
-                if(!foundProducts.isEmpty()){
-                    productFound = true;
-                    System.out.println("Farm: " + farm.name());
-                    System.out.print("------");
-                    Utils.underlineString(farm.name());
-                    
-                    for(Product p: foundProducts){
-                        allProductsFound.add(p);
-                        System.out.println(p.toString(false, mainBuyer.cart.contains(p.identity())));
-                    }
-                }
-            }
-
-            //If no products found start a new search
-            if(!productFound){
-                Utils.clearConsole();
-                System.out.println("No product found try again!\n");
-                buyerProductMenu_Search();
-
-            } else {
-                search_productOptions(subCategory);
-            }
-
-        }
-
-        private void search_productOptions(SubCategory subCategory){
-
-            String selection = "";
-
-            System.out.println("\n---------------------------------------------------");
-            System.out.println("1 - Add product to cart | 2 - New Search | 3 - Home");
-            System.out.println("---------------------------------------------------");
-
-            while(selection != "valid"){
-
-                System.out.print("Your selectioin: ");
-                selection = input.nextLine();
-
                 switch(selection){
                     case "1":
-                        Utils.clearConsole();
-                        selection = "valid";
-                        productOptions_addToCart(subCategory);                    
-                        break;
-                    
+                            Utils.clearConsole();
+                            buyerProductMenu_Search();
+                    break;
+        
                     case "2":
-                        Utils.clearConsole();
-                        selection = "valid";
-                        buyerProductMenu();
-                        break;
-                    
+                    break;
+                
                     case "3":
                         Utils.clearConsole();
-                        selection = "valid";
                         buyerMainMenu();
                         break;
-
-
+        
                     default:
-                    System.out.println(selection + INVAL_SEL);
-                    break;
+                        Utils.clearConsole();
+                        System.out.println(selection + INVAL_SEL + '\n');
+                        buyerProductMenu();
+                        break;
                 }
-
+        
             }
 
-        }
+            // Search
+            private void buyerProductMenu_Search() {
 
-        private void productOptions_addToCart(SubCategory subCategory){
-            
-            //Used to add products to cart
-            ArrayList<Product> allProductsFound = new ArrayList<Product>();
+                String selection = "";
+                Category category = null;
+                SubCategory subCategory = null;
 
-            //Search For Products
-            for(Farm farm : HeadQ.farms()){
-                ArrayList<Product> foundProducts = DB.customProductSearch(DB, categories, farm.name(), subCategory);
-                if(!foundProducts.isEmpty()){
-                    System.out.println("Farm: " + farm.name());
-                    System.out.print("------");
-                    Utils.underlineString(farm.name());
-                    
-                    for(Product p: foundProducts){
-                        allProductsFound.add(p);
-                        System.out.println(p.toString(false, mainBuyer.cart.contains(p.identity())));
+                System.out.println("Choose a category | 0 - Back");
+                System.out.println("----------------------------");
+                System.out.println("1. Vegetables");
+                System.out.println("2. Fruits");
+                System.out.println("3. Herbs\n");
+
+
+                //Category Selection
+                while(selection != "valid"){
+
+                    System.out.print("\nYour selection: ");
+                    selection = input.nextLine();
+
+                    switch(selection){
+
+                        case"0":
+                            Utils.clearConsole();                    
+                            buyerProductMenu();
+                            break;
+
+                        case"1":
+                            category = categories.vegetables;
+                            selection = "valid";
+                            break;
+
+                        case"2":
+                            category = categories.fruits;
+                            selection = "valid";
+                            break;
+
+                        case"3":
+                            category = categories.herbs;
+                            selection = "valid";
+                            break;
+
+                        default:
+                            System.out.println("\n" + selection + " is an invalid selection!");
+                            break;
+
                     }
-                }
-            }
+                } // End - Category selction
 
-            String capacityString = mainBuyer.cart.currentWeight() + "/" + Constants.WEIGHT_LIMIT + " grams";
-            
-            System.out.print("\n------------------------------------");
-            Utils.underlineString(capacityString);
-            System.out.println("Select the product | " + "Cart Capacity: " + capacityString);
-            System.out.print("------------------------------------");
-            Utils.underlineString(capacityString);
-            
+                Utils.clearConsole();
 
-            String selection = "";
+                System.out.println("Choose a subcategory - " + category.name());
+                System.out.print("-----------------------");
+                Utils.underlineString(category.name());
+                
+                category.viewSubCategories();
 
-            int quantity = 0;
-            Product selectedProduct = null;
-            int maxQuantity = 0;
+                selection = "";
 
-            while(selection != "valid"){
+                //SubCategory Selection
+                while(selection != "valid"){
+                    System.out.print("\nYour selection: ");
+                    selection = input.nextLine();
 
-                System.out.print("Product ID: ");
-                selection = input.nextLine();
-
-                try{
-                    int productId = Integer.parseInt(selection);
-                    if(!allProductsFound.stream().anyMatch(p -> productId == p.identity())) throw new Exception("Product not in search results!");
-                    selectedProduct = allProductsFound.stream().filter(p -> p.identity() == productId).findFirst().orElse(null);
-                    
-                    maxQuantity = mainBuyer.cart.maxQuantity(selectedProduct);
-
-                    if(maxQuantity < 1) throw new Exception("You don't have enough room for that product!");
-
-                    selection = "valid";
-                }catch(NumberFormatException e){
-                    System.out.println("Enter an integer!");
-                    
-                }catch(Exception e){
-                    System.out.println(e.getMessage());
-                }
-
-            }
-
-            selection="";
-
-            while(selection != "valid"){
-                System.out.print("Quantity: ");
-                selection = input.nextLine();
-
-                if(selectedProduct != null)
                     try{
+                        int selctionInt = Integer.parseInt(selection);
 
-                        int tempQuantity = Integer.parseInt(selection);
-                        if(tempQuantity < 1) throw new Exception("Enter a quantity greater then 0!");
-                        if(tempQuantity < 1 || tempQuantity > selectedProduct.quantity()) throw new Exception("Not enough quantity!");
-                        if(tempQuantity > maxQuantity) throw new Exception("You only have enough room for " + maxQuantity + "!");
+                        int numSubcategories = category.table.size();
 
-                        quantity = tempQuantity;
-
-                        selection = "valid";
-            
-                    }catch(NumberFormatException e){
-                        System.out.println("Enter an integer!");
-
+                        if( selctionInt < 0 || selctionInt > numSubcategories){
+                            System.out.println("\n" + selection + " is an invalid selection!");
+                        } else {
+                            subCategory = category.get(selctionInt);
+                            selection = "valid";
+                        }
+                        
                     }catch(Exception e){
 
-                        System.out.println(e.getMessage());
-            
+                        System.out.println("\n" + selection + " is an invalid selection!");
                     }
+            
+                }
+
+                Utils.clearConsole();
+                
+                ArrayList<Product> allProductsFound = DB.customProductSearch(DB, categories, subCategory);
+
+                boolean productFound = Utils.printProductsByFarm(allProductsFound, false, mainBuyer);
+
+                //If no products found start a new search
+                if(!productFound){
+                    Utils.clearConsole();
+                    System.out.println("No product found try again!\n");
+                    buyerProductMenu_Search();
+
+                } else {
+                    search_productOptions(subCategory, allProductsFound);
+                }
+
             }
 
-            mainBuyer.cart.add(selectedProduct, quantity);
+            private void search_productOptions(SubCategory subCategory, ArrayList<Product> foundProducts){
 
-            Utils.clearConsole();
+                String selection = "";
 
-            if(quantity > 1){
-                System.out.println("Products added to cart!\n");
-            } else {
-                System.out.println("Product added to cart!\n");
+                System.out.println("---------------------------------------------------");
+                System.out.println("1 - Add product to cart | 2 - New Search | 3 - Home");
+                System.out.println("---------------------------------------------------");
+
+                while(selection != "valid"){
+
+                    System.out.print("Your selectioin: ");
+                    selection = input.nextLine();
+
+                    switch(selection){
+                        case "1":
+                            Utils.clearConsole();
+                            selection = "valid";
+                            productOptions_addToCart(subCategory, foundProducts);                    
+                            break;
+                        
+                        case "2":
+                            Utils.clearConsole();
+                            selection = "valid";
+                            buyerProductMenu();
+                            break;
+                        
+                        case "3":
+                            Utils.clearConsole();
+                            selection = "valid";
+                            buyerMainMenu();
+                            break;
+
+
+                        default:
+                        System.out.println(selection + INVAL_SEL);
+                        break;
+                    }
+
+                }
+
             }
 
-            buyerMainMenu();
+            private void productOptions_addToCart(SubCategory subCategory, ArrayList<Product> foundProducts){
 
-        }
+                Utils.printProductsByFarm(foundProducts, false, mainBuyer);
+                
+                String capacityString = mainBuyer.cart.currentWeight() + "/" + Constants.WEIGHT_LIMIT + " grams";
+                
+                String selectionOptions = "Select the product | " + "Cart Capacity: " + capacityString;
+                Utils.surroundString(selectionOptions);
+                
+                String selection = "";
+                boolean validSelction = false;
 
-        // ------- USER MENU ---------
+                int quantity = 0;
+                Product selectedProduct = null;
+                int maxQuantity = 0;
+
+                while(!validSelction){
+
+                    System.out.print("Product ID: ");
+                    selection = input.nextLine();
+
+                    try{
+                        int productId = Integer.parseInt(selection);
+                        if(!foundProducts.stream().anyMatch(p -> productId == p.identity())) throw new Exception("Product not in search results!");
+                        selectedProduct = foundProducts.stream().filter(p -> p.identity() == productId).findFirst().orElse(null);
+                        if(selectedProduct.quantity() == 0) throw new Exception("We're all out!");
+                        maxQuantity = mainBuyer.cart.maxQuantity(selectedProduct);
+
+                        if(maxQuantity < 1) throw new Exception("You don't have enough room for that product!");
+                        validSelction = true;
+
+                    }catch(NumberFormatException e){
+                        System.out.println("Enter an integer!");
+                        
+                    }catch(Exception e){
+                        System.out.println(e.getMessage());
+                    }
+
+                }
+
+                validSelction = false;
+
+
+                while(!validSelction){
+                    System.out.print("Quantity: ");
+                    selection = input.nextLine();
+
+                    if(selectedProduct != null)
+                        try{
+
+                            int tempQuantity = Integer.parseInt(selection);
+                            if(tempQuantity < 1) throw new Exception("Enter a quantity greater then 0!");
+                            if(tempQuantity < 1 || tempQuantity > selectedProduct.quantity()) throw new Exception("Not enough quantity!");
+                            if(tempQuantity > maxQuantity) throw new Exception("You only have enough room for " + maxQuantity + "!");
+
+                            quantity = tempQuantity;
+
+                            validSelction = true;
+                
+                        }catch(NumberFormatException e){
+                            System.out.println("Enter an integer!");
+
+                        }catch(Exception e){
+
+                            System.out.println(e.getMessage());
+                
+                        }
+                }
+
+                mainBuyer.cart.add(selectedProduct, quantity);
+
+                Utils.clearConsole();
+
+                if(quantity > 1){
+                    System.out.println("Products added to cart!\n");
+                } else {
+                    System.out.println("Product added to cart!\n");
+                }
+
+                buyerMainMenu();
+
+            }
+
+        // ------- USER ACTIONS MENU ---------
 
         private void buyerUserMenu() {
 
@@ -488,10 +455,14 @@ public class AppDriver {
                 break;
 
                 case "3":
-                break;
+                    Utils.clearConsole();
+                    viewRelatedUsers(true);
+                    break;
 
                 case "4":
-                break;
+                    Utils.clearConsole();
+                    viewRelatedUsers(false);
+                    break;
             
                 case "5":
                     Utils.clearConsole();
@@ -509,7 +480,7 @@ public class AppDriver {
             
         }
 
-        //Search
+            //Search
             private void searchUserEntry() {
 
                 String targetUsername = "";
@@ -533,13 +504,43 @@ public class AppDriver {
 
                     Boolean smallResult = foundUsers.size() <= 10;
 
-                    if(smallResult) userViewSmall(foundUsers); else userViewLarge(foundUsers, 0);
+                    if(smallResult) userViewSmall(foundUsers, ListType.SEARCH); else userViewLarge(foundUsers, 0, ListType.SEARCH);
 
                 }
                 
             }
             
-            private void userViewSmall(ArrayList<Buyer> allUsers){
+            private void viewRelatedUsers(boolean following){
+
+                ArrayList<Buyer> foundUsers = null;
+                String username = mainBuyer.username();
+
+                foundUsers = following
+                                ? DB.getFollowing(DB, categories, username)
+                                : DB.getFollowers(DB, categories, username);
+
+                ListType type = following
+                                ? ListType.FOLLOWING
+                                : ListType.FOLLOWERS;
+
+                if(foundUsers.isEmpty()){
+
+                        if(following) System.out.println("You aren't following anyone!\n");
+                        else System.out.println("You have no followers!\n");
+                        buyerUserMenu();
+    
+                } else {
+
+                    Boolean smallResult = foundUsers.size() <= 10;
+
+                    if(smallResult) userViewSmall(foundUsers, type); else userViewLarge(foundUsers, 0, type);
+
+                }
+                    
+                
+            }
+
+            private void userViewSmall(ArrayList<Buyer> allUsers, ListType type){
 
                 String selection = "";
                 Boolean validSelection = false;
@@ -554,7 +555,7 @@ public class AppDriver {
                     
                     System.out.println();
 
-                    String userOptions = "1 - Select User | 2 - New Search | 3 - Home";
+                    String userOptions = "1 - Select User | 2 - Search | 3 - Home";
                     Utils.surroundString(userOptions);
 
                     while(!validSelection){
@@ -565,7 +566,7 @@ public class AppDriver {
                         switch(selection){
                             case "1":
                                 validSelection = true;
-                                selectUserFromSearch(allUsers, 0, Constants.INDEX_LIMIT-1);
+                                selectUserFromList(allUsers, 0, Constants.INDEX_LIMIT-1, type);
                                 break;
 
                             case "2":
@@ -579,8 +580,7 @@ public class AppDriver {
                                 validSelection = true;
                                 Utils.clearConsole();
                                 buyerMainMenu();
-
-                            break;
+                                break;
 
                             default:
                             System.out.println(selection + INVAL_SEL);
@@ -592,7 +592,7 @@ public class AppDriver {
 
             }
         
-            private void userViewLarge(ArrayList<Buyer> allUsers, int StartIndex){
+            private void userViewLarge(ArrayList<Buyer> allUsers, int StartIndex, ListType type){
 
                 Utils.printFoundUsersTitle(allUsers);
 
@@ -604,12 +604,12 @@ public class AppDriver {
                     endIndex++;
                 }
                     
-                indexUserViewMenu(allUsers, StartIndex, endIndex);
+                indexUserViewMenu(allUsers, StartIndex, endIndex, type);
 
 
             }
 
-            private void indexUserViewMenu(ArrayList<Buyer> allUsers, int startIndex, int endIndex){
+            private void indexUserViewMenu(ArrayList<Buyer> allUsers, int startIndex, int endIndex, ListType type){
                 String menu = null;
 
                 String selection = "";
@@ -618,11 +618,11 @@ public class AppDriver {
 
 
                 if(startIndex == 0){
-                    menu = "1 - Next Page | 2 - Select User | 3 - New Search | 4 - Home";
+                    menu = "1 - Next Page | 2 - Select User | 3 - Search | 4 - Home";
                 } else if(endIndex > allUsers.size()) {
-                    menu = "1 - Previous Page | 2 - Select User | 3 - New Search | 4 - Home";
+                    menu = "1 - Previous Page | 2 - Select User | 3 - Search | 4 - Home";
                 } else {
-                    menu = "1 - Previous Page | 2 - Next Page | 3 - Select User | 4 - New Search | 5 - Home";
+                    menu = "1 - Previous Page | 2 - Next Page | 3 - Select User | 4 -  Search | 5 - Home";
                 }
                 
                 Utils.surroundString(menu);
@@ -637,12 +637,12 @@ public class AppDriver {
                             case "1":
                                 validSelection = true;
                                 Utils.clearConsole();
-                                userViewLarge(allUsers, endIndex);
+                                userViewLarge(allUsers, endIndex, type);
                                 break;
 
                             case "2":
                                 validSelection = true;
-                                selectUserFromSearch(allUsers, startIndex, endIndex);
+                                selectUserFromList(allUsers, startIndex, endIndex, type);
                                 break;
 
                             // New Search
@@ -670,12 +670,12 @@ public class AppDriver {
                             case "1":
                                 validSelection = true;
                                 Utils.clearConsole();
-                                userViewLarge(allUsers, startIndex-indexLimit);
+                                userViewLarge(allUsers, startIndex-indexLimit, type);
                                 break;
 
                             case "2":
                                 validSelection = true;
-                                selectUserFromSearch(allUsers, startIndex, endIndex);                            
+                                selectUserFromList(allUsers, startIndex, endIndex, type);                            
                                 break;
 
                             // New Search
@@ -703,18 +703,18 @@ public class AppDriver {
                             case "1":
                                 validSelection = true;
                                 Utils.clearConsole();
-                                userViewLarge(allUsers, startIndex-indexLimit);
+                                userViewLarge(allUsers, startIndex-indexLimit, type);
                                 break;
 
                             case "2":
                                 validSelection = true;
                                 Utils.clearConsole();
-                                userViewLarge(allUsers, endIndex);
+                                userViewLarge(allUsers, endIndex, type);
                                 break;
 
                             case "3":
                                 validSelection = true;
-                                selectUserFromSearch(allUsers, startIndex, endIndex);
+                                selectUserFromList(allUsers, startIndex, endIndex, type);
                                 break;
 
 
@@ -743,7 +743,7 @@ public class AppDriver {
 
             }
             
-            private void selectUserFromSearch(ArrayList<Buyer> allUsers, int startIndex, int endIndex){
+            private void selectUserFromList(ArrayList<Buyer> allUsers, int startIndex, int endIndex, ListType type){
 
                 String selection = "";
                 Boolean validSelection = false;
@@ -765,7 +765,7 @@ public class AppDriver {
 
                         Utils.clearConsole();
 
-                        selectedUserAction(selectedUser, allUsers, startIndex);
+                        selectedUserAction(selectedUser, allUsers, startIndex, type);
 
                     }catch(NumberFormatException e){
                         System.out.println("Enter an integer!\n");
@@ -779,7 +779,7 @@ public class AppDriver {
 
             }
             
-            private void selectedUserAction(Buyer selectedUser, ArrayList<Buyer> allUsers, int startIndex){
+            private void selectedUserAction(Buyer selectedUser, ArrayList<Buyer> allUsers, int startIndex, ListType type){
 
                 Boolean validSelection = false;  
                 String following = selectedUser.isFollowing()
@@ -812,13 +812,25 @@ public class AppDriver {
                                 selectedUser.isFollowing(false);
                                 Utils.clearConsole();
                                 System.out.println("You unfollowed " + selectedUser.username() + "!\n");
-                                userViewLarge(allUsers, startIndex);
+                                if(type == ListType.FOLLOWERS){
+                                    viewRelatedUsers(false);
+                                }else if(type == ListType.FOLLOWING){
+                                    viewRelatedUsers(true);
+                                } else if(type == ListType.SEARCH){
+                                    userViewLarge(allUsers, startIndex, type);
+                                }
                                 break;
             
                             case"2":
                                 validSelection = true;
                                 Utils.clearConsole();
-                                userViewLarge(allUsers, startIndex);
+                                if(type == ListType.FOLLOWERS){
+                                    viewRelatedUsers(false);
+                                }else if(type == ListType.FOLLOWING){
+                                    viewRelatedUsers(true);
+                                } else if(type == ListType.SEARCH){
+                                    userViewLarge(allUsers, startIndex, type);
+                                }
                                 break;
             
                             case"3":
@@ -840,14 +852,20 @@ public class AppDriver {
                                 DB.followUser(mainBuyer.username(), selectedUser.username());
                                 selectedUser.isFollowing(true);
                                 Utils.clearConsole();
-                                System.out.println("You unfollowed " + selectedUser.username() + "!\n");
-                                userViewLarge(allUsers, startIndex);
+                                System.out.println("You followed " + selectedUser.username() + "!\n");
+                                if(type == ListType.FOLLOWERS){
+                                    viewRelatedUsers(false);
+                                }else if(type == ListType.FOLLOWING){
+                                    viewRelatedUsers(true);
+                                } else if(type == ListType.SEARCH){
+                                    userViewLarge(allUsers, startIndex, type);
+                                }
                                 break;
             
                             case"2":
                                 validSelection = true;
                                 Utils.clearConsole();
-                                userViewLarge(allUsers, startIndex);
+                                userViewLarge(allUsers, startIndex, type);
                                 break;
             
                             case"3":
@@ -870,6 +888,7 @@ public class AppDriver {
 
             }
 
+        
         // ------- BUYER CART ---------
 
         private void buyerCartMenu() {
@@ -907,10 +926,13 @@ public class AppDriver {
                 } else {
                     int cartId = mainBuyer.cart.checkout(input, false);
                     Utils.clearConsole();
-                    mainBuyer.cart = new Cart(DB, categories, mainBuyer.username());
-                    mainBuyer.updatePurchaseHistory();
-                    System.out.print("Your order number is " + cartId + "\n");
+                    if(cartId != -1){
+                        mainBuyer.cart = new Cart(DB, categories, mainBuyer.username());
+                        mainBuyer.updatePurchaseHistory();
+                        System.out.print("Your order number is " + cartId + "\n");
+                    }
                     buyerMainMenu();
+
     
                 }
 
@@ -1145,7 +1167,7 @@ public class AppDriver {
 
         }
             
-    // ------- FARM ACTIOINS ---------
+    // ------- FARM ---------
     private void farmMainMenu(){
 
         String selection;
@@ -1189,36 +1211,21 @@ public class AppDriver {
     }
     
     private void farmMainMenu_Inventory(){
-        String selection = "";
+        String title = "Your Inventory | Press ENTER to go back";
+        System.out.println(title);
+        Utils.underlineString(title);
 
-        System.out.println("Your Inventory | 1 - Back");
-        System.out.println("-------------------------");
+        mainFarm.viewInventory();
 
-        mainFarm.viewInventory(false);
-
-
-        while(selection != "valid"){
-
-            System.out.print("\nYour selection: ");
-            selection = input.nextLine();
-    
-            switch(selection){
-                case "1":
-                    Utils.clearConsole();
-                    farmMainMenu();
-                    selection = "valid";
-                    break;
-
-                default:
-                    System.out.println(selection + INVAL_SEL);
-            }
-        }
-        
-
+        input.nextLine();
+        Utils.clearConsole();
+        farmMainMenu();
+            
+  
     }
     
-    // ------- ADMIN ACTIONS ---------
-    private void adminMainMenu() {
+    // ------- ADMIN ---------
+    public void adminMainMenu() {
         String selection;
 
         System.out.println("Admin Menu");
@@ -1232,11 +1239,14 @@ public class AppDriver {
 
         switch(selection){
             case "1":
+            Utils.clearConsole();
+            HeadQ.viewLiveOrders();
+            adminMainMenu();
             break;
 
             case "2":
             Utils.clearConsole();
-            adminMainMenu_Inventory();
+            adminMainMenu_Farms();
             break;
             
             case "3":
@@ -1253,41 +1263,37 @@ public class AppDriver {
         
     }
 
-    private void adminMainMenu_Inventory() {
+    private void adminMainMenu_Farms() {
         String selection;
 
         System.out.println("Head Quarters Inventory");
         System.out.println("-----------------------");
-        HeadQ.viewInventory();
 
-        System.out.println("\n-------------------------------------------------------------------");
-        System.out.println("1 - Add Farm | 2 - Add New Product | 3 - Restock Product  | 4 - Back");
-        System.out.println("--------------------------------------------------------------------");
+        HeadQ.viewFarms();
 
-        System.out.print("\nYour selection: ");
+        System.out.println();
+
+        String options = "1 - Select Farm | 2 - Add Farm | 3 - Back";
+        Utils.surroundString(options);
+
+        System.out.print("Your selection: ");
         selection = input.nextLine();
 
         switch(selection){
             case "1":
                 Utils.clearConsole();
-                HeadQ.createNewFarm();
-                adminMainMenu_Inventory();
+                Farm farm = HeadQ.selectFarm();
+                Utils.clearConsole();
+                adminMainMenu_Farm(farm);
                 break;
 
             case "2":
                 Utils.clearConsole();
-                HeadQ.createProduct();
-                adminMainMenu_Inventory();
+                HeadQ.createNewFarm();
+                adminMainMenu_Farms();
                 break;
             
             case "3":
-                Utils.clearConsole();
-                HeadQ.viewInventory();
-                HeadQ.restockProduct();
-                adminMainMenu_Inventory();
-                break;
-
-            case "4":
                 Utils.clearConsole();
                 adminMainMenu();
                 break;
@@ -1295,10 +1301,60 @@ public class AppDriver {
             default:
                 Utils.clearConsole();
                 System.out.println(selection + INVAL_SEL);
-                adminMainMenu_Inventory();
+                adminMainMenu_Farms();
 
         }
         
     }
+
+    private void adminMainMenu_Farm(Farm farm) {
+
+        String selection = "";
+        boolean validSelction = false;
+
+        String title = farm.name() + " Inventory";
+        System.out.println(title);
+        Utils.underlineString(title);
+
+        farm.viewInventory();
+        
+        System.out.println();
+
+        String options = "1 - Add New Product | 2 - Restock Product | 3 - Back";
+        Utils.surroundString(options);
+
+        while(!validSelction){
+            System.out.print("Your selection: ");
+            selection = input.nextLine();
+
+            switch(selection){
+            case "1":
+                validSelction = true;
+                Utils.clearConsole();
+                HeadQ.createProduct(farm);
+                adminMainMenu_Farm(farm);
+                break;
+            
+            case "2":
+                validSelction = true;
+                Utils.clearConsole();
+                HeadQ.restockProduct(farm);
+                adminMainMenu_Farm(farm);
+                break;
+
+            case "3":
+                validSelction = true;
+                Utils.clearConsole();
+                adminMainMenu_Farms();
+                break;
+
+            default:
+                System.out.println(selection + INVAL_SEL + '\n');
+
+        }
+        
+        }
+    }
+
 
 }

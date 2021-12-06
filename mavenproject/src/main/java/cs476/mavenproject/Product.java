@@ -10,9 +10,10 @@ public class Product {
 	private double price;
 	private double weight;
 	private int quantity;
+	private String farm;
 	Database DB;
 
-	public Product(Database DB, int identity, String name, Category category, SubCategory subCategory, double price, int quantity) {
+	public Product(Database DB, int identity, String name, Category category, SubCategory subCategory, double price, int quantity, String farm) {
 		this.identity = identity;
 		this.name = name;
 		this.category = category;
@@ -20,10 +21,15 @@ public class Product {
 		this.price = price;
 		this.weight = subCategory.weight();
 		this.quantity = quantity;
+		this.farm = farm;
 	}
 
 	public int identity() {
 		return identity;
+	}
+
+	public String farm() {
+		return farm;
 	}
 
 	public Category category() {

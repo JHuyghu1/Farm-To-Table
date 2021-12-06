@@ -1,7 +1,9 @@
 package cs476.mavenproject;
 import java.util.ArrayList;
+import java.util.Map;
 import java.util.Scanner;
 
+import cs476.mavenproject.Cart.CartStatus;
 import cs476.mavenproject.Categories.Category;
 
 public class HeadQ {
@@ -49,14 +51,13 @@ public class HeadQ {
 
 	}
 
-	public void createProduct(){
+	public void createProduct(Farm farm){
 
         String name = "";
 		Category category = null;
         SubCategory subCategory = null;
         double price = 0;
 		int quantity = 0;
-		Farm farm = null;
 
         System.out.println("Add a product");
         System.out.println("--------------");
@@ -174,30 +175,6 @@ public class HeadQ {
 			}
 		}
 
-
-		Utils.clearConsole();
-
-		selection = "";
-		System.out.println("What farm is selling it?");
-		System.out.println("------------------------");
-		viewFarms();
-
-		while(selection != "valid"){
-			System.out.print("\nYour selection: ");
-			selection = input.nextLine();
-
-			int selctionInt = Integer.parseInt(selection);
-			int numFarms = farms.size();
-
-			if( selctionInt < 0 || selctionInt > numFarms){
-				System.out.println("\n" + selection + " is an invalid selection!");
-			} else {
-				farm = farms.get(selctionInt-1);
-				selection = "valid";
-			}
-	
-		}
-
 		//Add new product to DB
 		DB.createProductNode(DB, name, category, subCategory, price, quantity, farm.name());
 		
@@ -205,49 +182,58 @@ public class HeadQ {
 
 	}
 
-	public void restockProduct(){
+	public void restockProduct(Farm farm){
 		Product product = null;
 		int poductId = 0;
         int quantity = 0;
 		String selection = ""; 
+		boolean validSelection = false;
 
-		System.out.println("\n-----------------");
-        System.out.println("Restock a product");
-        System.out.println("-----------------\n");
+		String title = "Restock a product";
+		Utils.surroundString(title);
 
-		while(selection != "valid"){
+		farm.viewInventory();
+		
+
+		while(!validSelection){
+
 			System.out.print("Enter Product ID: ");
 			selection = input.nextLine();
+
 			try{
 				poductId = Integer.parseInt(selection);
-				product = DB.findProduct(DB, categories, poductId);
-				if(product == null) throw new Exception("Product doesn't exsits");
-				selection = "valid";
+				if(!farm.carriesProduct(poductId)) throw new Exception("This farm don't carry this product");
+				product = farm.getProduct(poductId);
+				validSelection = true;
+
+			}catch(NumberFormatException e){
+				System.out.println("Enter an integer!");
+
 			}catch(Exception e){
-				System.out.println("\n" + selection + " is an invalid ID!");
+				System.out.println(e.getMessage());
+
 			}
 		}
 
 		Utils.clearConsole();
-		selection = "";
+		validSelection = false;
 
-		//pull current quantity
 		quantity = product.quantity();
 
 		String productInfo = "Product: " + product.name() + " | Current Inventory: " + quantity;
         System.out.println(productInfo);
 		Utils.underlineString(productInfo);
 
-		while(selection != "valid"){
+		while(!validSelection){
 			System.out.print("\nEnter Restock Amount: ");
 			selection = input.nextLine();
 			try{
 				//Increase quantity
 				quantity += Integer.parseInt(selection);
-				selection = "valid";
+				validSelection = true;
 
 			}catch(Exception e){
-				System.out.println("\n" + selection + " is an invalid quanity!");
+				System.out.println("Enter an integer!");
 			}
 		}
 
@@ -258,9 +244,42 @@ public class HeadQ {
 
 	}
 
-
 	public ArrayList<Farm> farms() {
 		return farms;
+	}
+
+	public Farm selectFarm(){
+
+		Utils.clearConsole();
+
+		String selection = "";
+		boolean validSelectionl = false;
+		Farm farm = null;
+
+		String title = "Head Quarters Inventory";
+
+		System.out.println(title);
+		Utils.underlineString(title);
+		viewFarms();
+
+		while(!validSelectionl){
+			System.out.print("\nChoose a farm: ");
+			selection = input.nextLine();
+
+			int selctionInt = Integer.parseInt(selection);
+			int numFarms = farms.size();
+
+			if( selctionInt < 0 || selctionInt > numFarms){
+				System.out.println(selection + " is an invalid selection!");
+			} else {
+				farm = farms.get(selctionInt-1);
+				validSelectionl = true;
+			}
+	
+		}
+
+		return farm;
+
 	}
 
 	public void viewFarms(){
@@ -269,28 +288,135 @@ public class HeadQ {
 		}
 	}
 
-	public void viewInventory() {
+	private void liveOrderOptions(ArrayList<Cart> orders){
 
-		ArrayList<String> emptyFarms = new ArrayList<String>();
+		System.out.println();
 
-		if (farms.size() > 0) {
-			for (Farm farm : farms) {
-				farm.viewInventory(true);
+		String optioins = "1 - Select Order | 2 - Refresh | 3 - Back";
+		Utils.surroundString(optioins);
 
-				if(farm.inventory().size() < 1)
-					emptyFarms.add(farm.name());
+		boolean validSelection = false;
+		String selection = "";
+
+		while(!validSelection){
+
+			System.out.print("Your Selection: ");
+			selection = input.nextLine();
+
+			switch(selection){
+
+				case"1":
+					validSelection = true;
+						if(orders.isEmpty()) viewLiveOrders();
+						else selectLiveOrder(Utils.cartArrayToMap(orders));
+					break;
+
+				case"2":
+					validSelection = true;
+					viewLiveOrders();
+					break;
+
+				case"3":
+					validSelection = true;
+					Utils.clearConsole();
+					break;
+
+				default:
+					System.out.println(selection + " is an invalid selection!");
+					break;
+
 			}
-
-			if(emptyFarms.size() > 0){
-				System.out.println("\nFarms with no products: " + emptyFarms.toString());
-			}
-
-		} else {
-
-			System.out.println("Farm to Table has no iventory! \n");
-
 		}
-
 	}
+	
+	private void selectLiveOrder(Map<Integer,Cart> orders){
+
+		boolean validSelection = false;
+		String selection = "";
+
+		while(!validSelection){
+
+			System.out.print("Enter Order ID: ");
+			selection = input.nextLine();
+
+			try{
+
+				int id = Integer.parseInt(selection);
+				if(!orders.containsKey(id)) throw new Exception("That is not a live order!");
+				validSelection = true;
+				selectLiveOrderStatus(orders.get(id));
+
+			} catch (NumberFormatException e){
+				System.out.println("Enter an integer!");
+
+			} catch (Exception e){
+				System.out.println(e.getMessage());
+			}
+		}
+	}
+	
+	private void selectLiveOrderStatus(Cart cart){
+
+		Utils.clearConsole();
+		cart.pullCartItems();
+		cart.viewCart(false);
+		boolean validSelection = false;
+		String selection = "";
+
+		boolean isShipped = cart.status() != CartStatus.ORDERED;
+
+		String optioins = (!isShipped)
+							? "1 - Shipped | 2 - Back"
+							: "1 - Delivered | 2 - Back";
+
+		Utils.surroundString(optioins);
+
+
+		while(!validSelection){
+
+			System.out.print("Your Selection: ");
+			selection = input.nextLine();
+
+			switch(selection){
+
+				case"1":
+					validSelection = true;
+					Utils.clearConsole();
+					if (isShipped)
+						DB.updateCartStatus(cart.identity(), CartStatus.DELIVERED);
+					else
+						DB.updateCartStatus(cart.identity(), CartStatus.SHIPPED);
+					
+					viewLiveOrders();
+					break;
+
+				case"2":
+					validSelection = true;
+					viewLiveOrders();
+					break;
+
+				default:
+					System.out.println(selection + " is an invalid selection!");
+					break;
+
+			}
+		
+		}
+	}
+
+	public void viewLiveOrders(){
+		
+		ArrayList<Cart> liveOrders = DB.getLiveOrders(DB, categories);
+
+		Utils.clearConsole();
+		String title = "Live Orders";
+		System.out.println(title);
+		Utils.underlineString(title);
+		System.out.println();
+
+		if(liveOrders.isEmpty()) System.out.println("No orders to fulfill!");
+		Utils.printCartsByStatus(liveOrders);
+		liveOrderOptions(liveOrders);
+}
 
 }

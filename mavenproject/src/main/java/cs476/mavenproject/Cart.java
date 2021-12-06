@@ -32,6 +32,14 @@ public class Cart {
 		this.categories = categories;
 	}
 
+	//Used for quick search
+	public Cart(Database DB, Categories categories, int id, CartStatus status) {
+		this.DB = DB;
+		this.categories = categories;
+		this.identity = id;
+		this.status = status;
+	}
+
 	public Cart(Database DB, Categories categories, int identity, String owner, double payloadWeight, double totalCost, CartStatus status) {
 		this.DB = DB;
 		this.categories = categories;
@@ -63,6 +71,10 @@ public class Cart {
 
 	public String statusString(){
 		return Utils.stringFromStatus(status);
+	}
+
+	public CartStatus status(){
+		return status;
 	}
 
 
@@ -193,6 +205,7 @@ public class Cart {
 
 		final boolean [] changed = {false};
 
+
 		products.forEach((k,v) -> {
 			
 			//Cart Product
@@ -211,8 +224,8 @@ public class Cart {
 
 
 			if(quanityDifference < 0){
-				remove(updatedProduct, quanityDifference);
-				System.out.println("Removed " + quanityDifference + " Product ID: " + productId + " from cart due to low supply!\n");
+				remove(updatedProduct, Math.abs(quanityDifference));
+				System.out.println("Product ID:" + productId + " low supply! removed " + Math.abs(quanityDifference) + ". \n");
 				changed[0] = true;
 			}
 
@@ -231,8 +244,8 @@ public class Cart {
 				System.out.println("You have no products in your cart!");
 	
 			} else {
-	
-				updateCartToCurrentSupply();
+
+
 				products.forEach((k,v) -> {
 					System.out.println(v.getKey().toString(true, v.getValue()));
 				} );
@@ -252,22 +265,6 @@ public class Cart {
 
 		}
 
-		/*
-		int index = 0;
-
-		if (products.size() > 0) {
-			for (Product product : products) {
-				System.out.println(++index + ". " + product.toString(true) + "\n");
-			}
-
-			System.out.println(
-					"--> Cost: $" + cost + "\n--> Weight: " + payloadWeight + "/" + Constants.WEIGHT_LIMIT + " grams");
-
-		} else {
-			System.out.println("Cart is empty, nothing to view.");
-
-		}
-		*/
 	}
 
 	//Print a cart proudct to the console
@@ -285,7 +282,13 @@ public class Cart {
 	}
 
 	private void userInputForCartChange(Scanner input){
-		System.out.println("Items were removed due to suppluy, would you still like to checkout?");
+	
+		String title = "Updated Cart";
+		Utils.underlineString(title);
+		viewCart(true);
+
+
+		System.out.println("\nItems were removed due to suppluy, would you still like to checkout?");
 		System.out.println("----------------");
 		System.out.println("1 - Yes | 2 - No");
 		System.out.println("----------------");

@@ -27,7 +27,6 @@ public class Buyer {
 		this.password = password;
 		this.address = address;
 		this.cart = new Cart(DB, categories, this.username);
-		this.purchaseHistory = DB.getBuyerPurchaseHistory(DB, categories, username);
 
 	}
 
