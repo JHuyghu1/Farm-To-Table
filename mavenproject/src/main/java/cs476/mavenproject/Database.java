@@ -178,14 +178,24 @@ public class Database implements AutoCloseable{
 	// By username
 	public Buyer findBuyer(final Database DB, final Categories categories, final String username){
 		  final String query = "MATCH (n:Buyer) WHERE n.username = $username RETURN n.address, n.password";
+		  
 		  try(Session session = driver.session()){
 			  Buyer buyer = session.readTransaction(new TransactionWork<Buyer>(){
 				  public Buyer execute(Transaction tx){
 					  Result result = tx.run(query, parameters("username", username));
-					  Record record = result.single();
 
-					  Buyer temp = new Buyer(DB, categories, username, record.get("n.address").asString(), record.get("n.password").asString());
-					  return temp;
+					  if(result.hasNext()){
+						Record record = result.single();
+						String address = record.get("n.address").asString();
+						String password = record.get("n.password").asString();
+						Buyer buyer = new Buyer(DB, categories, username, address, password);
+
+						return buyer;
+
+					  } else {
+						return null;
+
+					  }
 				  }
 			  });
 			  return buyer;
@@ -279,8 +289,10 @@ public class Database implements AutoCloseable{
 			  String output = session.writeTransaction(new TransactionWork<String>() {
 				  public String execute(Transaction tx) {
 					  Result result = tx.run(follower, parameters("user", user, "target", target));
+					  Record record = result.single();
 					  tx.commit();
-					  return result.single().get("t.username").asString();  
+
+					  return record.get("t.username").asString();  
 				  }
 			  });
 			  return output;
@@ -296,8 +308,10 @@ public class Database implements AutoCloseable{
 			String output = session.writeTransaction(new TransactionWork<String>() {
 				public String execute(Transaction tx) {
 					Result result = tx.run(follower, parameters("user", user, "target", target));
+					Record record = result.single();
+
 					tx.commit();
-					return result.single().get("t.username").asString();  
+					return record.get("t.username").asString();  
 				}
 			});
 			return output;
@@ -306,7 +320,8 @@ public class Database implements AutoCloseable{
 	
 	// Buyer -[r:FOLLOWS]-> Buyer(Current user)
 	public ArrayList<Buyer> getFollowers(final Database DB, final Categories categories, final String username){
-		final String query = "MATCH (t:Buyer)-[:FOLLOWS]->(u:Buyer) WHERE u.username = $username RETURN t.username as follower";
+		final String query = "MATCH (t:Buyer)-[:FOLLOWS]->(u:Buyer) WHERE u.username = $username " + 
+							 "RETURN t.username as follower, exists((u)-[:FOLLOWS]->(t)) as isFollowing";
 		try(Session session = driver.session()){
 			ArrayList<Buyer> farms = session.readTransaction(new TransactionWork<ArrayList<Buyer>>(){
 				public ArrayList<Buyer> execute(Transaction tx){
@@ -315,8 +330,11 @@ public class Database implements AutoCloseable{
 					Result result = tx.run(query, parameters("username", username));
 
 					while(result.hasNext()){
-						String followerUsername = result.next().get("follower").asString();
-						Buyer follower = findBuyer(DB, categories, followerUsername);
+						Record record = result.next();
+						String followerUsername = record.get("follower").asString();
+						boolean isFollowing = record.get("isFollowing").asBoolean();
+
+						Buyer follower = new Buyer(followerUsername, isFollowing);
 
 						tempFollowers.add(follower);
 					}
@@ -341,7 +359,7 @@ public class Database implements AutoCloseable{
 
 					while(result.hasNext()){
 						String followerUsername = result.next().get("following").asString();
-						Buyer follower = findBuyer(DB, categories, followerUsername);
+						Buyer follower = new Buyer(followerUsername, true);
 						
 						tempFollowers.add(follower);
 					}
@@ -383,6 +401,36 @@ public class Database implements AutoCloseable{
 
 	}
 	
+	// Show people you are following first
+	public ArrayList<Buyer> findBuyersByUsername(final Database DB, final Categories categories, final String user, final String target){
+		final String query = "MATCH (t:Buyer) WHERE t.username CONTAINS $target AND t.username <> $user " +
+							 "RETURN t.username, exists((:Buyer{username: $user})-[:FOLLOWS]->(t)) as isFollowing " +
+							 "ORDER BY isFollowing DESC";
+		try(Session session = driver.session()){
+			ArrayList<Buyer> farms = session.readTransaction(new TransactionWork<ArrayList<Buyer>>(){
+				public ArrayList<Buyer> execute(Transaction tx){
+
+					ArrayList<Buyer> foundBuyers = new ArrayList<Buyer>();
+					Result result = tx.run(query, parameters("user", user, "target", target));
+
+					while(result.hasNext()){
+						Record record = result.next();
+						String foundUsername = record.get("t.username").asString();
+						Boolean isfollowing = record.get("isFollowing").asBoolean();
+						Buyer buyer = new Buyer(foundUsername, isfollowing);
+						foundBuyers.add(buyer);
+					}
+
+					return foundBuyers;
+					
+					
+				}
+			});
+			return farms;
+		} 
+
+	}
+
 	// -------- FARM ACTIONS -------------
 
 	// Return inventory for farm (username)
@@ -491,9 +539,10 @@ public class Database implements AutoCloseable{
 		} 		
   }
 
+
   	// -------- CART ACTIONS -------------
 
-	// By id
+	// [Cart ID <Product, Quantity in Cart>]
   	public HashMap<Integer, Entry<Product,Integer>> getCartItems(final Database DB, final Categories categories, final int cartId){
 
 		final String query = "MATCH (c:Cart)-[r:CONTAINS]-(p:Product) WHERE id(c) = $cartId RETURN id(p) as id, r.amount";

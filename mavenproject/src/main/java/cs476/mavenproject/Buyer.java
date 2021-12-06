@@ -10,6 +10,11 @@ public class Buyer {
 	private ArrayList<Cart> purchaseHistory = new ArrayList<Cart>();
 	private ArrayList<Buyer> following = new ArrayList<Buyer>();
 	private ArrayList<Buyer> followers = new ArrayList<Buyer>();
+
+	//Used for buyer search results
+	private Boolean isFollowing = false;
+
+	//Dependencies
 	Cart cart;
 	Database DB;
 	Categories categories;
@@ -24,6 +29,12 @@ public class Buyer {
 		this.cart = new Cart(DB, categories, this.username);
 		this.purchaseHistory = DB.getBuyerPurchaseHistory(DB, categories, username);
 
+	}
+
+	//Used for search querry
+	public Buyer(final String username, final boolean isFollowing){
+		this.username = username;
+		this.isFollowing = isFollowing;
 	}
 
 	public String id() {
@@ -44,6 +55,14 @@ public class Buyer {
 	public String address() {
 		return address;
 
+	}
+
+	public boolean isFollowing(){
+		return isFollowing;
+	}
+
+	public void isFollowing(boolean status){
+		isFollowing = status;
 	}
 
 	public ArrayList<Buyer> following() {

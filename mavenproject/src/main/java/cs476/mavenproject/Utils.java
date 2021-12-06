@@ -1,7 +1,7 @@
 package cs476.mavenproject;
 
 import java.io.IOException;
-
+import java.util.ArrayList;
 import cs476.mavenproject.Cart.CartStatus;
 
 public class Utils {
@@ -58,5 +58,33 @@ public class Utils {
 		System.out.println();
 	}
 
+	public static void surroundString(String s){
+		underlineString(s);
+		System.out.println(s);
+		underlineString(s);
+		System.out.println();
+	}
+
+	public static void printFoundUser(Buyer foundUser, int index){
+		String username = foundUser.username();
+		String isFollowing = foundUser.isFollowing()
+								? " - F"
+								: "";
+
+		String userString = index++ + " - " + username + isFollowing;
+		System.out.println(userString);
+		System.out.println("--");
+
+	}
+
+	public static void printFoundUsersTitle(ArrayList<Buyer> foundUsers){
+		String userTittle = foundUsers.size() == 1 ? " User" : " Users";
+
+		String title = "Found: " + foundUsers.size() + userTittle + " | F = Following";
+
+		System.out.println(title);
+		underlineString(title);
+
+	}
 
 }

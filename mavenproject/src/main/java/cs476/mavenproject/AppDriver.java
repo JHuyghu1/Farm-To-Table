@@ -1,7 +1,10 @@
 package cs476.mavenproject;
 
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Scanner;
+
+import org.omg.DynamicAny.DynAny;
 
 import cs476.mavenproject.Categories.Category;
 
@@ -91,7 +94,7 @@ public class AppDriver {
     
     // ------- BUYER ACTIOINS ---------
 
-    public void buyerMainMenu() {
+    private void buyerMainMenu() {
         String selection;
 
         System.out.println("Main Menu for: " + mainBuyer.username());
@@ -157,7 +160,7 @@ public class AppDriver {
         
     }
 
-    public void buyerProductMenu() {
+    private void buyerProductMenu() {
 
         String selection = "";
 
@@ -197,7 +200,7 @@ public class AppDriver {
         // ------- PRODUCT MENU ---------
 
         // Search Product
-        public void buyerProductMenu_Search() {
+        private void buyerProductMenu_Search() {
 
             String selection = "";
             Category category = null;
@@ -314,7 +317,7 @@ public class AppDriver {
 
         }
 
-        public void search_productOptions(SubCategory subCategory){
+        private void search_productOptions(SubCategory subCategory){
 
             String selection = "";
 
@@ -356,7 +359,7 @@ public class AppDriver {
 
         }
 
-        public void productOptions_addToCart(SubCategory subCategory){
+        private void productOptions_addToCart(SubCategory subCategory){
             
             //Used to add products to cart
             ArrayList<Product> allProductsFound = new ArrayList<Product>();
@@ -459,13 +462,13 @@ public class AppDriver {
 
         // ------- USER MENU ---------
 
-        public void buyerUserMenu() {
+        private void buyerUserMenu() {
 
             String selection = "";
 
             System.out.println("User Menu");
             System.out.println("---------");
-            System.out.println("1 - Custom Search");
+            System.out.println("1 - Search");
             System.out.println("2 - Recomendations");
             System.out.println("3 - Following");
             System.out.println("4 - Followers");
@@ -477,7 +480,9 @@ public class AppDriver {
 
             switch(selection){
                 case "1":
-                break;
+                    Utils.clearConsole();
+                    searchUserEntry();
+                    break;
 
                 case "2":
                 break;
@@ -504,9 +509,370 @@ public class AppDriver {
             
         }
 
+        //Search
+            private void searchUserEntry() {
+
+                String targetUsername = "";
+                ArrayList<Buyer> foundUsers = null;
+
+                System.out.println("Search for users");
+                System.out.println("----------------");
+
+                System.out.print("\nEnter a username: ");
+                targetUsername = input.nextLine();
+
+                foundUsers = DB.findBuyersByUsername(DB, categories, mainBuyer.username(), targetUsername);
+
+                Utils.clearConsole();
+
+                if(foundUsers.isEmpty()){
+                    System.out.println("No users found!\n");
+                    buyerUserMenu();
+
+                } else {
+
+                    Boolean smallResult = foundUsers.size() <= 10;
+
+                    if(smallResult) userViewSmall(foundUsers); else userViewLarge(foundUsers, 0);
+
+                }
+                
+            }
+            
+            private void userViewSmall(ArrayList<Buyer> allUsers){
+
+                String selection = "";
+                Boolean validSelection = false;
+
+                Utils.printFoundUsersTitle(allUsers);
+
+                    int index = 1;
+
+                    for(Buyer foundUser: allUsers){
+                        Utils.printFoundUser(foundUser, index++);
+                    }
+                    
+                    System.out.println();
+
+                    String userOptions = "1 - Select User | 2 - New Search | 3 - Home";
+                    Utils.surroundString(userOptions);
+
+                    while(!validSelection){
+
+                        System.out.print("\nYour selection: ");
+                        selection = input.nextLine();
+
+                        switch(selection){
+                            case "1":
+                                validSelection = true;
+                                selectUserFromSearch(allUsers, 0, Constants.INDEX_LIMIT-1);
+                                break;
+
+                            case "2":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                searchUserEntry();
+                                break;
+
+                            // Home
+                            case "3":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                buyerMainMenu();
+
+                            break;
+
+                            default:
+                            System.out.println(selection + INVAL_SEL);
+                            break;
+
+                        }
+
+                    }
+
+            }
+        
+            private void userViewLarge(ArrayList<Buyer> allUsers, int StartIndex){
+
+                Utils.printFoundUsersTitle(allUsers);
+
+                int indexLimit = Constants.INDEX_LIMIT;
+                int endIndex = StartIndex;
+
+                for(int i = StartIndex; i < (StartIndex+indexLimit) && i < allUsers.size(); i++){
+                    Utils.printFoundUser(allUsers.get(i), i+1);
+                    endIndex++;
+                }
+                    
+                indexUserViewMenu(allUsers, StartIndex, endIndex);
+
+
+            }
+
+            private void indexUserViewMenu(ArrayList<Buyer> allUsers, int startIndex, int endIndex){
+                String menu = null;
+
+                String selection = "";
+                Boolean validSelection = false;
+                int indexLimit = Constants.INDEX_LIMIT;
+
+
+                if(startIndex == 0){
+                    menu = "1 - Next Page | 2 - Select User | 3 - New Search | 4 - Home";
+                } else if(endIndex > allUsers.size()) {
+                    menu = "1 - Previous Page | 2 - Select User | 3 - New Search | 4 - Home";
+                } else {
+                    menu = "1 - Previous Page | 2 - Next Page | 3 - Select User | 4 - New Search | 5 - Home";
+                }
+                
+                Utils.surroundString(menu);
+
+                while(!validSelection){
+
+                    System.out.print("Your selection: ");
+                    selection = input.nextLine();
+
+                    if(startIndex == 0){
+                        switch(selection){
+                            case "1":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                userViewLarge(allUsers, endIndex);
+                                break;
+
+                            case "2":
+                                validSelection = true;
+                                selectUserFromSearch(allUsers, startIndex, endIndex);
+                                break;
+
+                            // New Search
+                            case "3":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                searchUserEntry();
+                                break;
+
+                            // Home
+                            case "4":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                buyerMainMenu();
+                                break;
+
+                            default:
+                            System.out.println(selection + INVAL_SEL);
+                            break;
+
+                        }
+
+                    } else if(endIndex > allUsers.size()) {
+                        switch(selection){
+                            case "1":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                userViewLarge(allUsers, startIndex-indexLimit);
+                                break;
+
+                            case "2":
+                                validSelection = true;
+                                selectUserFromSearch(allUsers, startIndex, endIndex);                            
+                                break;
+
+                            // New Search
+                            case "3":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                searchUserEntry();
+                                break;
+
+                            // Home
+                            case "4":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                buyerMainMenu();
+                                break;
+
+                            default:
+                            System.out.println(selection + INVAL_SEL);
+                            break;
+
+                        }
+
+                    } else {
+                        switch(selection){
+                            case "1":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                userViewLarge(allUsers, startIndex-indexLimit);
+                                break;
+
+                            case "2":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                userViewLarge(allUsers, endIndex);
+                                break;
+
+                            case "3":
+                                validSelection = true;
+                                selectUserFromSearch(allUsers, startIndex, endIndex);
+                                break;
+
+
+                            // New Search
+                            case "4":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                searchUserEntry();
+                                break;
+
+                            // Home
+                            case "5":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                buyerMainMenu();
+                                break;
+
+                            default:
+                                System.out.println(selection + INVAL_SEL);
+                                break;
+
+                        }
+
+                    }
+                }
+
+            }
+            
+            private void selectUserFromSearch(ArrayList<Buyer> allUsers, int startIndex, int endIndex){
+
+                String selection = "";
+                Boolean validSelection = false;
+                
+                while(!validSelection){
+
+                    System.out.print("Enter number next to user: ");
+                    selection = input.nextLine();
+
+                    try{
+
+                        int selectedInt = Integer.parseInt(selection);
+
+                        if(selectedInt > endIndex || selectedInt < startIndex+1 || selectedInt > allUsers.size()){
+                            throw new Exception("That number isn't in the results\n");
+                        }
+                        
+                        Buyer selectedUser = allUsers.get(selectedInt-1);
+
+                        Utils.clearConsole();
+
+                        selectedUserAction(selectedUser, allUsers, startIndex);
+
+                    }catch(NumberFormatException e){
+                        System.out.println("Enter an integer!\n");
+
+                    }catch(Exception e){
+                        System.out.println(e.getMessage());
+                    }
+
+
+                }
+
+            }
+            
+            private void selectedUserAction(Buyer selectedUser, ArrayList<Buyer> allUsers, int startIndex){
+
+                Boolean validSelection = false;  
+                String following = selectedUser.isFollowing()
+                                    ? "True"
+                                    : "False";
+                
+                String title = "Selected User: " + selectedUser.username() + " | Following: " + following + '\n';
+                
+                String menu = selectedUser.isFollowing()
+                                ? "1 - Unfollow User | 2 - Back | 3 - Home"
+                                : "1 - Follow User | 2 - Back | 3 - Home";
+
+                String selection = "";
+
+                System.out.println(title);
+
+                Utils.surroundString(menu);
+
+                while(!validSelection){
+
+                    System.out.print("Your selection: ");
+                    selection = input.nextLine();
+
+                    if(selectedUser.isFollowing()){
+                        switch(selection){
+
+                            case"1":
+                                validSelection = true;
+                                DB.unfollowUser(mainBuyer.username(), selectedUser.username());
+                                selectedUser.isFollowing(false);
+                                Utils.clearConsole();
+                                System.out.println("You unfollowed " + selectedUser.username() + "!\n");
+                                userViewLarge(allUsers, startIndex);
+                                break;
+            
+                            case"2":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                userViewLarge(allUsers, startIndex);
+                                break;
+            
+                            case"3":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                buyerMainMenu();
+                                break;
+                            default:
+                                System.out.println(selection + INVAL_SEL + '\n');
+                                break;
+            
+                        }
+            
+                    } else {
+                        switch(selection){
+
+                            case"1":
+                                validSelection = true;
+                                DB.followUser(mainBuyer.username(), selectedUser.username());
+                                selectedUser.isFollowing(true);
+                                Utils.clearConsole();
+                                System.out.println("You unfollowed " + selectedUser.username() + "!\n");
+                                userViewLarge(allUsers, startIndex);
+                                break;
+            
+                            case"2":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                userViewLarge(allUsers, startIndex);
+                                break;
+            
+                            case"3":
+                                validSelection = true;
+                                Utils.clearConsole();
+                                buyerMainMenu();
+                                break;
+                            default:
+                                System.out.println(selection + INVAL_SEL + '\n');
+                                break;
+            
+                        }
+            
+                    }
+
+                }
+
+                
+
+
+            }
+
         // ------- BUYER CART ---------
 
-        public void buyerCartMenu() {
+        private void buyerCartMenu() {
             
             String selection = "";
 
@@ -577,7 +943,7 @@ public class AppDriver {
             
         }
     
-        public void buyerCartMenu_Edit(){
+        private void buyerCartMenu_Edit(){
 
             String selection = "";
             Boolean valid = false;
@@ -672,7 +1038,7 @@ public class AppDriver {
 
         }
         
-        public void buyerCartMenu_Edit_Increase(Product product){
+        private void buyerCartMenu_Edit_Increase(Product product){
 
             boolean valid = false;
             String selection = "";
@@ -719,7 +1085,7 @@ public class AppDriver {
 
         }
         
-        public void buyerCartMenu_Edit_Decrease(Product product){
+        private void buyerCartMenu_Edit_Decrease(Product product){
 
             boolean valid = false;
             String selection = "";
@@ -766,7 +1132,7 @@ public class AppDriver {
 
         // ------- PURCHASE HISTORY ---------
 
-        public void buyerHistory(){
+        private void buyerHistory(){
 
             System.out.println("Purchase History | Press ENTER to go back");
             System.out.print("------------------------------------------\n");
@@ -780,7 +1146,7 @@ public class AppDriver {
         }
             
     // ------- FARM ACTIOINS ---------
-    public void farmMainMenu(){
+    private void farmMainMenu(){
 
         String selection;
 
@@ -822,7 +1188,7 @@ public class AppDriver {
 
     }
     
-    public void farmMainMenu_Inventory(){
+    private void farmMainMenu_Inventory(){
         String selection = "";
 
         System.out.println("Your Inventory | 1 - Back");
@@ -852,7 +1218,7 @@ public class AppDriver {
     }
     
     // ------- ADMIN ACTIONS ---------
-    public void adminMainMenu() {
+    private void adminMainMenu() {
         String selection;
 
         System.out.println("Admin Menu");
@@ -887,7 +1253,7 @@ public class AppDriver {
         
     }
 
-    public void adminMainMenu_Inventory() {
+    private void adminMainMenu_Inventory() {
         String selection;
 
         System.out.println("Head Quarters Inventory");
