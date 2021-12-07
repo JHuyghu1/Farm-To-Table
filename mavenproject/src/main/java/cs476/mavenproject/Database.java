@@ -203,6 +203,29 @@ public class Database implements AutoCloseable{
 		  } 
 	  }
 	
+	public String getBuyerAddress(final String username){
+		final String query = "MATCH (n:Buyer) WHERE n.username = $username RETURN n.address ";
+		try(Session session = driver.session()){
+			String output = session.readTransaction(new TransactionWork<String>(){
+				public String execute(Transaction tx){
+
+					Result result = tx.run(query, parameters("username", username));
+
+					if(result.hasNext()){
+
+						Record record = result.single();
+						String a = record.get("n.address").asString();
+
+						return a;
+					}
+
+					return "test";
+				}
+			});
+			return output;
+		} 
+	}
+
 	// By username
 	public Farm findFarm(final Database DB, final Categories categories, final String username){
 		final String farmer1 = "MATCH (farm:Farm) WHERE farm.username = $username RETURN farm.displayName, farm.password";
@@ -228,6 +251,7 @@ public class Database implements AutoCloseable{
 	}
 	
 	public String getFarmDisplayName(final String username){
+
 		final String query = "MATCH (farm:Farm{username:$username}) RETURN farm.displayName";
 		try(Session session = driver.session()){
 			String output = session.readTransaction(new TransactionWork<String>(){
@@ -411,7 +435,7 @@ public class Database implements AutoCloseable{
 		} 
 	}
 
-	// Buyer -[r:CONTAINS]-> Cart
+	// Buyer -[r:PURCHASED]-> Cart
 	public ArrayList<Cart> getBuyerPurchaseHistory(final Database DB, final Categories categories, final String username ){
 
 		final String query = "MATCH (b:Buyer)-[:PURCHASED]->(c:Cart) WHERE b.username = $username "+
@@ -477,6 +501,86 @@ public class Database implements AutoCloseable{
 
 	}
 
+	public ArrayList<Product> favoriteItems(final Database DB, final Categories categories, final String username){
+		final String query = "MATCH (f:Farm)<-[r:EXCHANGED]-(b:Buyer{username: $username}), (p:Product) " +
+							"WHERE id(p) = r.product " + 
+							"RETURN id(p) as id, p.name, p.price, p.category, p.subCategory, sum(r.amount) as total " +
+							"ORDER BY total DESC LIMIT 5";
+
+		try(Session session = driver.session()){
+			ArrayList<Product> farms = session.readTransaction(new TransactionWork<ArrayList<Product>>(){
+				public ArrayList<Product> execute(Transaction tx){
+
+					ArrayList<Product> sales = new ArrayList<Product>();
+					Result result = tx.run(query, parameters("username", username));
+
+					while(result.hasNext()){
+						Record record = result.next();
+
+						int identity = record.get("id").asInt();
+						String name = record.get("p.name").asString();
+						Double price = record.get("p.price").asDouble();
+						int totalSold = record.get("total").asInt();
+						Category category = categories.getCategoryByName(record.get("p.category").asString());
+						SubCategory subCategory = category.get(record.get("p.subCategory").asString());
+
+						Product product = new Product(identity, name, price, totalSold, category, subCategory);
+
+						sales.add(product);
+					}
+
+					return sales;
+
+				}
+			});
+			return farms;
+		} 
+	}
+
+	public ArrayList<Product> bProductRecommendations(final Database DB, final Categories categories, final Product product){
+
+		final String query = "MATCH (c:Cart)-[r:CONTAINS]->(p:Product), (sameCartProduct:Product) " +
+							 "WHERE id(p) = $productId "+ 
+							 "AND sameCartProduct <> p AND sameCartProduct.subCategory != $subCategory " +
+							 "AND (c)-[rr:CONTAINS]->(sameCartProduct)" + 
+							 "RETURN id(sameCartProduct) as id, sameCartProduct.name as name, sameCartProduct.price as price, "+ 
+							 "sameCartProduct.category as category, p.subCategory as subCategory, count(rr) as frequency " +
+							 "ORDER BY frequency DESC LIMIT 5";
+
+		try(Session session = driver.session()){
+			ArrayList<Product> farms = session.readTransaction(new TransactionWork<ArrayList<Product>>(){
+				public ArrayList<Product> execute(Transaction tx){
+
+					ArrayList<Product> sales = new ArrayList<Product>();
+					Result result = tx.run(query, parameters("productId", product.identity(), "subCategory", product.subCategory().name()));
+
+					while(result.hasNext()){
+						Record record = result.next();
+
+						int identity = record.get("id").asInt();
+						String name = record.get("name").asString();
+						Double price = record.get("price").asDouble();
+						int totalSold = record.get("frequency").asInt();
+						Category category = categories.getCategoryByName(record.get("p.category").asString());
+						SubCategory subCategory = category.get(record.get("p.subCategory").asString());
+
+						Product product = new Product(identity, name, price, totalSold, category, subCategory);
+
+						sales.add(product);
+					}
+
+					return sales;
+
+				}
+			});
+			return farms;
+		} 
+	}
+
+
+
+	
+	
 	// -------- FARM ACTIONS -------------
 
 	// Return inventory for farm (username)
@@ -557,7 +661,8 @@ public class Database implements AutoCloseable{
 						Record record = result.next();
 
 						Category category = categories.getCategoryByName(record.get("p.category").asString());
-						SubCategory subCategory = category.get(record.get("p.subCategory").asString());
+						String subCatString = record.get("p.subCategory").asString();
+						SubCategory subCategory = category.get(subCatString);
 						int id = record.get("id").asInt();
 						String name = record.get("p.name").asString();
 						double price = record.get("p.price").asDouble();
@@ -596,26 +701,30 @@ public class Database implements AutoCloseable{
 		}	
 	}
 
+
 	// Create Product -[r:CONTAINS]-> Cart (r.amount)
 	public void addProductToCart(final int cartId, final int prodId, final int amount) {
+		System.out.println(cartId + " " + amount + " " + prodId);
+
 		final String query = "MATCH (c:Cart), (p:Product), (b:Buyer), (f:Farm) " +
 							 "WHERE id(c) = $cartId AND id(p) = $prodId AND b.username = c.owner AND f.username = p.farm "+
-							 "CREATE (c)-[:CONTAINS{amount: $amount}]->(p) " +
-							 "CREATE (b)-[:EXCHANGED{product: $prodId, amount: $amount}]->(f) " +
-							 "RETURN c,p";
+							 "CREATE (c)-[r:CONTAINS{amount: $amount}]->(p) " +
+							 "CREATE (b)-[r2:EXCHANGED{product: $prodId, amount: $amount}]->(f) " +
+							 "RETURN c.owner";
 		try(Session session = driver.session()){
 			session.writeTransaction(new TransactionWork<String>() {
 				public String execute(Transaction tx) {
-					tx.run(query, parameters("cartId", cartId, "prodId", prodId, "amount", amount ));
+					Result result = tx.run(query, parameters("cartId", cartId, "prodId", prodId, "amount", amount ));
+					Record record = result.single();
+					
 					tx.commit();
-
 					return null;
 				}
 			});
 		} 		
   }
 
-   public ArrayList<Product> getSales(final Database DB, final Categories categories, final String username){
+   	public ArrayList<Product> getSales(final Database DB, final Categories categories, final String username){
 	final String query = "MATCH (f:Farm{username: $username})<-[r:EXCHANGED]-(b:Buyer), (p:Product) " +
 						 "WHERE id(p) = r.product " + 
 						 "RETURN id(p) as id, p.name, p.price, p.category, p.subCategory, sum(r.amount) as total " +
@@ -651,13 +760,88 @@ public class Database implements AutoCloseable{
 	} 
 }
 
+	public ArrayList<Product> topFiveSellers(final Database DB, final Categories categories, final String username){
+		final String query = "MATCH (f:Farm{username: $username})<-[r:EXCHANGED]-(b:Buyer), (p:Product) " +
+							"WHERE id(p) = r.product " + 
+							"RETURN id(p) as id, p.name, p.price, p.category, p.subCategory, sum(r.amount) as total " +
+							"ORDER BY total DESC LIMIT 5";
 
-  	// -------- CART ACTIONS -------------
+		try(Session session = driver.session()){
+			ArrayList<Product> farms = session.readTransaction(new TransactionWork<ArrayList<Product>>(){
+				public ArrayList<Product> execute(Transaction tx){
+
+					ArrayList<Product> sales = new ArrayList<Product>();
+					Result result = tx.run(query, parameters("username", username));
+
+					while(result.hasNext()){
+						Record record = result.next();
+
+						int identity = record.get("id").asInt();
+						String name = record.get("p.name").asString();
+						Double price = record.get("p.price").asDouble();
+						int totalSold = record.get("total").asInt();
+						Category category = categories.getCategoryByName(record.get("p.category").asString());
+						SubCategory subCategory = category.get(record.get("p.subCategory").asString());
+
+						Product product = new Product(identity, name, price, totalSold, category, subCategory);
+
+						sales.add(product);
+					}
+
+					return sales;
+
+				}
+			});
+			return farms;
+		} 
+	}
+
+	public ArrayList<Product> productRecommendations(final Database DB, final Categories categories, final Product product){
+
+		final String query = "MATCH (c:Cart)-[r:CONTAINS]->(p:Product), (sameCartProduct:Product) " +
+							 "WHERE id(p) = $productId "+ 
+							 "AND sameCartProduct <> p AND sameCartProduct.subCategory <> $subCategory " +
+							 "AND (c)-[:CONTAINS]->(sameCartProduct)" + 
+							 "RETURN id(sameCartProduct) as id, sameCartProduct.name as name, sameCartProduct.price as price, "+ 
+							 "sameCartProduct.category as car, p.subCategory as sub, count(sameCartProduct) as frequency " +
+							 "ORDER BY frequency DESC LIMIT 5";
+
+		try(Session session = driver.session()){
+			ArrayList<Product> farms = session.readTransaction(new TransactionWork<ArrayList<Product>>(){
+				public ArrayList<Product> execute(Transaction tx){
+
+					ArrayList<Product> sales = new ArrayList<Product>();
+					Result result = tx.run(query, parameters("productId", product.identity(), "subCategory", product.subCategory().name()));
+
+					while(result.hasNext()){
+						Record record = result.next();
+
+						int identity = record.get("id").asInt();
+						String name = record.get("name").asString();
+						Double price = record.get("price").asDouble();
+						int totalSold = record.get("frequency").asInt();
+						Category category = categories.getCategoryByName(record.get("cat").asString());
+						SubCategory subCategory = category.get(record.get("sub").asString());
+
+						Product product = new Product(identity, name, price, totalSold, category, subCategory);
+
+						sales.add(product);
+					}
+
+					return sales;
+
+				}
+			});
+			return farms;
+		} 
+	}
+
+	// -------- CART ACTIONS -------------
 
 	// [Cart ID <Product, Quantity in Cart>]
   	public HashMap<Integer, Entry<Product,Integer>> getCartItems(final Database DB, final Categories categories, final int cartId){
 
-		final String query = "MATCH (c:Cart)-[r:CONTAINS]-(p:Product) WHERE id(c) = $cartId "+
+		final String query = "MATCH (c:Cart)-[r:CONTAINS]->(p:Product) WHERE id(c) = $cartId "+
 							 "RETURN id(p) as id, p.name, p.category, p.subCategory, p.price, p.quantity, r.amount";
 		try(Session session = driver.session()){
 			HashMap<Integer, Entry<Product,Integer>> output = session.readTransaction(new TransactionWork<HashMap<Integer, Entry<Product,Integer>>>(){
@@ -683,7 +867,8 @@ public class Database implements AutoCloseable{
 	
 						tempInventory.put(id, new SimpleEntry<Product, Integer>(product, cartQuantity));
 
-					}
+					} 
+											
 
 					return tempInventory;
 
@@ -712,9 +897,9 @@ public class Database implements AutoCloseable{
 	}
 
 	public ArrayList<Buyer> recommendNewFollowers(final String username){
-		final String query = "MATCH (main:Buyer {username: $username})->[:FOLLOWS]->(f:Buyer)-[:FOLLOWS]->(ff:Buyer) "
+		final String query = "MATCH (main:Buyer {username: $username})-[:FOLLOWS]->(f:Buyer)-[:FOLLOWS]->(ff:Buyer) "
 							+ "WHERE main <> ff AND NOT (main)-[:FOLLOWS]->(ff) "
-							+ "RETURN s.username, count(ff) as frequency "
+							+ "RETURN ff.username, count(ff) as frequency "
 							+ "ORDER BY frequency DESC LIMIT 10 ";
 
 		try (Session session = driver.session()){
@@ -726,7 +911,7 @@ public class Database implements AutoCloseable{
 
 					while(result.hasNext()){
 						Record record = result.next();
-						String username = record.get("s.username").asString();
+						String username = record.get("ff.username").asString();
 						int frequency = record.get("frequency").asInt();
 
 						Buyer buyer = new Buyer(username, frequency);
@@ -743,26 +928,27 @@ public class Database implements AutoCloseable{
 	public ArrayList<Cart> getLiveOrders(final Database DB, final Categories categories){
 
 		final String ordered = Utils.stringFromStatus(CartStatus.ORDERED);
-		final String delivered = Utils.stringFromStatus(CartStatus.DELIVERED);;
+		final String shipped = Utils.stringFromStatus(CartStatus.SHIPPED);;
 
-		final String query = "MATCH (c:Cart) WHERE c.status <> $Ordered AND c.status <> $Delivered "+
-							 "RETURN id(c) as id, c.status";
+		final String query = "MATCH (c:Cart) WHERE c.status = $ordered OR c.status = $shipped "+
+							 "RETURN id(c) as id, c.status, c.owner";
 
 		try(Session session = driver.session()){
 			ArrayList<Cart> output = session.readTransaction(new TransactionWork<ArrayList<Cart>>(){
 				public ArrayList<Cart> execute(Transaction tx){
 
 					ArrayList<Cart> liveOrders = new ArrayList<Cart>();
-					Result result = tx.run(query, parameters("Ordered", ordered, "Delivered", delivered ));
+					Result result = tx.run(query, parameters("ordered", ordered, "shipped", shipped ));
 
 					while(result.hasNext()){
 						Record record = result.next();
 
 						int id = record.get("id").asInt();
+						String owner = record.get("c.owner").asString();
 						String stringStatus = record.get("c.status").asString();
 						CartStatus status = Utils.statusFromString(stringStatus);
 
-						Cart cart = new Cart(DB, categories, id, status);
+						Cart cart = new Cart(DB, categories, id, status, owner);
 						
 						liveOrders.add(cart);
 					}

@@ -237,7 +237,6 @@ public class HeadQ {
 		quantity = product.quantity();
 
 		String productInfo = "Product: " + product.name() + " | Current Inventory: " + quantity;
-        System.out.println(productInfo);
 		Utils.underlineString(productInfo);
 
 		while(!validSelection){
@@ -273,9 +272,8 @@ public class HeadQ {
 		Farm farm = null;
 
 		String title = "Head Quarters Inventory";
-
-		System.out.println(title);
 		Utils.underlineString(title);
+
 		viewFarms();
 
 		while(!validSelectionl){
@@ -390,14 +388,14 @@ public class HeadQ {
 
 		Utils.clearConsole();
 		cart.pullCartItems();
-		cart.viewCart(false);
+		cart.viewCart(false, true);
 		boolean validSelection = false;
 		String selection = "";
 
 		boolean isShipped = cart.status() != CartStatus.ORDERED;
 
 		String optioins = (!isShipped)
-							? "1 - Shipped | 2 - Back"
+							? "1 - Generate Flight Plane | 2 - Shipped | 3 - Back"
 							: "1 - Delivered | 2 - Back";
 
 		Utils.surroundString(optioins);
@@ -408,28 +406,49 @@ public class HeadQ {
 			System.out.print("Your Selection: ");
 			selection = input.nextLine();
 
-			switch(selection){
+			if(selection.equals("1")){
 
-				case"1":
-					validSelection = true;
-					Utils.clearConsole();
-					if (isShipped)
-						DB.updateCartStatus(cart.identity(), CartStatus.DELIVERED);
-					else
-						DB.updateCartStatus(cart.identity(), CartStatus.SHIPPED);
+				validSelection = true;
+				Utils.clearConsole();
+
+				if (isShipped)
+					DB.updateCartStatus(cart.identity(), CartStatus.DELIVERED);
+				else{
+
+					System.out.print("Enter Latitude: ");
+					String latitude = input.nextLine();
+
+					System.out.print("Enter Longditude: ");
+					String longditude = input.nextLine();
+
+					try{
+						WriteXmlDom1.generate(latitude, longditude);
+					} catch(Exception e){
+						Utils.printError(e.getMessage());
+					}
+
+
+		
+				}
 					
+				
+				viewLiveOrders();
+
+			} else if (selection.equals("2")){
+
+				validSelection = true;
+
+				if (isShipped)
 					viewLiveOrders();
-					break;
+				else
+					DB.updateCartStatus(cart.identity(), CartStatus.SHIPPED);
 
-				case"2":
-					validSelection = true;
-					viewLiveOrders();
-					break;
+			} else if (selection.equals("3") && !isShipped){
+				validSelection = true;
+				viewLiveOrders();
 
-				default:
-					System.out.println(selection + " is an invalid selection!");
-					break;
-
+			} else {
+				System.out.println(selection + " is an invalid selection!");
 			}
 		
 		}
@@ -441,7 +460,6 @@ public class HeadQ {
 
 		Utils.clearConsole();
 		String title = "Live Orders";
-		System.out.println(title);
 		Utils.underlineString(title);
 		System.out.println();
 

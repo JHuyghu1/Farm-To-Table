@@ -106,7 +106,7 @@ public class Buyer {
 
 	public void viewPurchaseHistory() {
 		for (Cart cart : purchaseHistory) {
-			cart.viewCart(false);
+			cart.viewCart(false, false);
 			System.out.println();
 
 		}

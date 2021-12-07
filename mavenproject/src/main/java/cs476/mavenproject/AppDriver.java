@@ -1,6 +1,7 @@
 package cs476.mavenproject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 import cs476.mavenproject.Categories.Category;
 
@@ -17,7 +18,8 @@ public class AppDriver {
     private enum ListType {
         FOLLOWING,
         FOLLOWERS,
-        SEARCH
+        SEARCH,
+        SIMILAR,
     }
     public AppDriver(Database DB, Scanner input){
         this.DB = DB;
@@ -96,9 +98,8 @@ public class AppDriver {
     private void buyerMainMenu() {
         String selection;
 
-        System.out.println("Main Menu for: " + mainBuyer.username());
-        System.out.print("---------------");
-        Utils.underlineString(mainBuyer.username());
+        String title = "Main Menu for: " + mainBuyer.username();
+        Utils.underlineString(title);
 
         System.out.println("1 - Users");
         System.out.println("2 - Products");
@@ -111,29 +112,27 @@ public class AppDriver {
         System.out.print("\nYour selection: ");
         selection = input.nextLine();
 
+        Utils.clearConsole();
+
         switch(selection){
 
             // View Users Menu
             case "1":
-                Utils.clearConsole();
                 buyerUserMenu();;
                 break;
 
             // View Poduct Menu
             case "2":
-                Utils.clearConsole();
                 buyerProductMenu();;
                 break;
             
             // View Buyer Cart
             case "3":
-                Utils.clearConsole();
                 buyerCartMenu();
                 break;
 
             // View Buyer Cart
             case "4":
-                Utils.clearConsole();
                 mainBuyer.updatePurchaseHistory();
                 if(mainBuyer.purchaseHistory().isEmpty()){
                     System.out.println("You havn't made a purchase yet!");
@@ -146,13 +145,11 @@ public class AppDriver {
 
             // Logout
             case "5":
-                Utils.clearConsole();
                 mainBuyer = null;
                 login();
                 break;
 
             default:
-                Utils.clearConsole();
                 Utils.invalidSelection(selection);
                 buyerMainMenu();
 
@@ -169,29 +166,29 @@ public class AppDriver {
                 System.out.println("Product Menu");
                 System.out.println("------------");
                 System.out.println("1 - Search");
-                System.out.println("2 - Recomendations");
+                System.out.println("2 - Food For Thought");
                 System.out.println("3 - Back");
         
         
                 System.out.print("\nYour selection: ");
                 selection = input.nextLine();
-        
+
+                Utils.clearConsole();
+
                 switch(selection){
                     case "1":
-                            Utils.clearConsole();
                             buyerProductMenu_Search();
                     break;
         
                     case "2":
-                    break;
+                        buyer_product_reccomendations();
+                        break;
                 
                     case "3":
-                        Utils.clearConsole();
                         buyerMainMenu();
                         break;
         
                     default:
-                        Utils.clearConsole();
                         Utils.invalidSelection(selection);
                         buyerProductMenu();
                         break;
@@ -250,9 +247,8 @@ public class AppDriver {
 
                 Utils.clearConsole();
 
-                System.out.println("Choose a subcategory - " + category.name());
-                System.out.print("-----------------------");
-                Utils.underlineString(category.name());
+                String chooseSub = "Choose a subcategory - " + category.name();
+                Utils.underlineString(chooseSub);
                 
                 category.viewSubCategories();
 
@@ -284,23 +280,30 @@ public class AppDriver {
 
                 Utils.clearConsole();
                 
-                ArrayList<Product> allProductsFound = DB.customProductSearch(DB, categories, subCategory);
+                ArrayList<Product> productList = DB.customProductSearch(DB, categories, subCategory);
 
-                boolean productFound = Utils.printProductsByFarm(DB, allProductsFound, false, mainBuyer);
+
+                boolean productsFound = Utils.printProductsByFarm(DB, productList, false, mainBuyer);
 
                 //If no products found start a new search
-                if(!productFound){
+                if(!productsFound){
                     Utils.clearConsole();
                     System.out.println("No product found try again!\n");
                     buyerProductMenu_Search();
 
                 } else {
-                    search_productOptions(subCategory, allProductsFound);
+                    search_productOptions(productList);
                 }
 
             }
 
-            private void search_productOptions(SubCategory subCategory, ArrayList<Product> foundProducts){
+            private void search_productOptions(ArrayList<Product> foundProducts){
+
+                HashMap<Integer,Product> allProductsOnPage = new HashMap<Integer,Product>();
+
+                for(Product p: foundProducts){
+                    allProductsOnPage.put(p.identity(),p);
+                }
 
                 String selection = "";
 
@@ -317,7 +320,7 @@ public class AppDriver {
                         case "1":
                             Utils.clearConsole();
                             selection = "valid";
-                            productOptions_addToCart(subCategory, foundProducts);                    
+                            productOptions_addToCart(foundProducts, false);                    
                             break;
                         
                         case "2":
@@ -342,7 +345,8 @@ public class AppDriver {
 
             }
 
-            private void productOptions_addToCart(SubCategory subCategory, ArrayList<Product> foundProducts){
+            private void productOptions_addToCart(ArrayList<Product> foundProducts, boolean isRec){
+
 
                 Utils.printProductsByFarm(DB, foundProducts, false, mainBuyer);
                 
@@ -375,12 +379,12 @@ public class AppDriver {
                 }catch(NumberFormatException e){
                     Utils.clearConsole();
                     Utils.printError("Enter an integer!");
-                    productOptions_addToCart(subCategory, foundProducts);
+                    productOptions_addToCart(foundProducts, isRec);
                     
                 }catch(Exception e){
                     Utils.clearConsole();
                     Utils.printError(e.getMessage());
-                    productOptions_addToCart(subCategory, foundProducts);
+                    productOptions_addToCart(foundProducts, isRec);
                 }
 
                 
@@ -424,11 +428,54 @@ public class AppDriver {
                     System.out.println("Product added to cart!\n");
                 }
 
-                buyerMainMenu();
-
+                if(isRec){
+                    buyer_product_reccomendations();
+                } else {
+                    buyerMainMenu();
+                }
             }
 
-        // ------- USER ACTIONS MENU ---------
+            private ArrayList<Product> print_buyer_product_recs(){
+
+                String username = mainBuyer.username();
+                ArrayList<Product> allProductsOnPage = new ArrayList<Product>();
+
+                Utils.underlineString("Food For Thought | Press ENTER to go back");
+        
+                ArrayList<Product> favoritePurchases = DB.favoriteItems(DB, categories, username);
+                allProductsOnPage.addAll(favoritePurchases);
+
+                Utils.underlineString("Your Favorite Purchases");
+        
+                for(Product p: favoritePurchases){
+                    System.out.println(p.salesString() + "\n--");
+                }
+        
+                if( favoritePurchases.size() > 0){
+                    System.out.println();
+                    Utils.underlineString("Product Recommendations");
+                    ArrayList<Product> recs = DB.productRecommendations(DB, categories, favoritePurchases.get(0));
+                    for(Product p: recs){
+                        System.out.println("ID:"+p.identity() + " " + p.subCategory().name() + p.name() + "\n--");
+                    }
+
+                }
+                return allProductsOnPage;
+            }
+
+            private void buyer_product_reccomendations(){
+
+        
+                print_buyer_product_recs();
+    
+                input.nextLine();
+
+                Utils.clearConsole();
+                buyerMainMenu();   
+
+            }
+        
+            // ------- USER ACTIONS MENU ---------
 
         private void buyerUserMenu() {
 
@@ -453,7 +500,9 @@ public class AppDriver {
                     break;
 
                 case "2":
-                break;
+                    Utils.clearConsole();
+                    viewSimilarUsers();
+                    break;
 
                 case "3":
                     Utils.clearConsole();
@@ -531,6 +580,29 @@ public class AppDriver {
 
                         if(following) System.out.println("You aren't following anyone!\n");
                         else System.out.println("You have no followers!\n");
+                        buyerUserMenu();
+    
+                } else {
+
+                    Boolean smallResult = foundUsers.size() <= Constants.INDEX_LIMIT;
+
+                    if(smallResult) userViewSmall(foundUsers, type); else userViewLarge(foundUsers, 0, type);
+
+                }
+                    
+                
+            }
+
+            private void viewSimilarUsers(){
+
+                String username = mainBuyer.username();
+                ArrayList<Buyer> foundUsers = DB.recommendNewFollowers(username);
+
+                ListType type = ListType.SIMILAR;
+
+                if(foundUsers.isEmpty()){
+
+                        Utils.printError("No recommendations, follow more people!");
                         buyerUserMenu();
     
                 } else {
@@ -830,6 +902,8 @@ public class AppDriver {
                                 viewRelatedUsers(true);
                             } else if(type == ListType.SEARCH){
                                 userViewLarge(allUsers, startIndex, type);
+                            } else if (type == ListType.SIMILAR){
+                                userViewLarge(allUsers, startIndex, type);
                             }
                             break;
         
@@ -840,6 +914,8 @@ public class AppDriver {
                             }else if(type == ListType.FOLLOWING){
                                 viewRelatedUsers(true);
                             } else if(type == ListType.SEARCH){
+                                userViewLarge(allUsers, startIndex, type);
+                            } else if (type == ListType.SIMILAR){
                                 userViewLarge(allUsers, startIndex, type);
                             }
                             break;
@@ -871,6 +947,8 @@ public class AppDriver {
                             }else if(type == ListType.FOLLOWING){
                                 viewRelatedUsers(true);
                             } else if(type == ListType.SEARCH){
+                                userViewLarge(allUsers, startIndex, type);
+                            } else if (type == ListType.SIMILAR){
                                 userViewLarge(allUsers, startIndex, type);
                             }
                             break;
@@ -909,16 +987,14 @@ public class AppDriver {
             String selection = "";
 
             String capacityString = mainBuyer.cart.currentWeight() + "/" + Constants.WEIGHT_LIMIT + " grams";
-            String cartInfo = "Capacity: " + capacityString + " | Total Cost: $" + mainBuyer.cart.currentCost();
+            String cartInfo = "Your Cart | Capacity: " + capacityString + " | Total Cost: $" + mainBuyer.cart.currentCost();
 
-            System.out.println("Your Cart | " + cartInfo);
-            System.out.print("------------");
             Utils.underlineString(cartInfo);
             System.out.println();
 
 
 
-            mainBuyer.cart.viewCart(true);
+            mainBuyer.cart.viewCart(true, false);
 
             System.out.println("\n---------------------------------------");
             System.out.println("1 - Checkout | 2 - Edit Item | 3 - Back");
@@ -988,7 +1064,7 @@ public class AppDriver {
             System.out.println("Your Cart");
             System.out.print("---------\n");
 
-            mainBuyer.cart.viewCart(true);
+            mainBuyer.cart.viewCart(true, false);
 
             System.out.println("\n----------------------");
             System.out.println("Choose an item to edit");
@@ -1085,13 +1161,12 @@ public class AppDriver {
             int productQuantity = product.quantity() - cartQuantity;
             int maxQuantity = mainBuyer.cart.maxQuantity(product);
 
-            System.out.println("\nIn your Cart: " + cartQuantity);
-            System.out.print("--------------");
-            Utils.underlineString(Integer.toString(cartQuantity));
+            String inCart = "In your Cart: " + cartQuantity;
+            String available = "Available: " + productQuantity;
 
-            System.out.println("\nAvailable: " + productQuantity);
-            System.out.print("-----------");
-            Utils.underlineString(Integer.toString(productQuantity));
+            Utils.underlineString(inCart);
+            System.out.println();
+            Utils.underlineString(available);
 
             while(!valid){
                 System.out.print("\nIncrease quantity by: ");
@@ -1170,9 +1245,8 @@ public class AppDriver {
 
         private void buyerHistory(){
 
-            System.out.println("Purchase History | Press ENTER to go back");
-            System.out.print("------------------------------------------\n");
-
+            Utils.underlineString("Purchase History | Press ENTER to go back");
+            
             mainBuyer.viewPurchaseHistory();
             input.nextLine();
 
@@ -1190,7 +1264,7 @@ public class AppDriver {
         System.out.println("----------");
         System.out.println("1 - Inventory");
         System.out.println("2 - Sales");
-        System.out.println("3 - Recommendations");
+        System.out.println("3 - Food For Thought");
         System.out.println("4 - Logout");
 
         System.out.print("\nYour selection: ");
@@ -1210,6 +1284,7 @@ public class AppDriver {
 
             case "3":
                 Utils.clearConsole();
+                farm_reccomendations();
                 break;
             
             case "4":
@@ -1228,7 +1303,6 @@ public class AppDriver {
     
     private void farm_inventory(){
         String title = "Your Inventory | Press ENTER to go back";
-        System.out.println(title);
         Utils.underlineString(title);
 
         mainFarm.viewInventory();
@@ -1239,7 +1313,38 @@ public class AppDriver {
             
   
     }
-       
+    
+    private void farm_reccomendations(){
+
+        String username = mainFarm.name();
+        String title = "Food For Thought | Press ENTER to go back";
+        Utils.underlineString(title);
+
+        ArrayList<Product> topSellers = DB.topFiveSellers(DB, categories, username);
+
+        Utils.underlineString("Your Top Sellers");
+
+        for(Product p: topSellers){
+            System.out.println(p.salesString() + "\n--");
+        }
+
+        if( topSellers.size() > 0){
+            System.out.println();
+            Utils.underlineString("Product Recommendations");
+            ArrayList<Product> recs = DB.productRecommendations(DB, categories, topSellers.get(0));
+            for(Product p: recs){
+                System.out.println(p.salesString() + "\n--");
+            }
+
+        }
+
+
+
+        input.nextLine();
+        Utils.clearConsole();
+        farm_mainMenu();
+    }
+
     private void indexSalesView(ArrayList<Product> products, int startIndex){
         int indexLimit = Constants.INDEX_LIMIT;
 
@@ -1249,7 +1354,6 @@ public class AppDriver {
 
         double totalRevenue = products.stream().mapToDouble(p-> p.price() * p.totalSold()).sum();
         String title = "Sales Portal | Total Revenue: $" + totalRevenue;
-        System.out.println(title);
         Utils.underlineString(title);
 
         if(products.isEmpty()){
@@ -1466,7 +1570,6 @@ public class AppDriver {
         boolean validSelction = false;
 
         String title = farm.name() + " Inventory";
-        System.out.println(title);
         Utils.underlineString(title);
 
         farm.viewInventory();

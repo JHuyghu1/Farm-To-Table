@@ -1,5 +1,7 @@
 package cs476.mavenproject;
+import java.util.List;
 import java.util.Scanner;
+
 
 
 
@@ -19,6 +21,13 @@ public class Main {
 		Utils.clearConsole();
 
 		driver.login();
+
+		//RandomBuyers buyerGenerator = new RandomBuyers(DB);
+
+		//buyerGenerator.createBuyers(2500);
+
+		//GenCoordinates.generate("916 woosdmere drive ny");
+
 		
 	}
 

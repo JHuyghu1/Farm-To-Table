@@ -33,11 +33,13 @@ public class Cart {
 	}
 
 	//Used for quick search
-	public Cart(Database DB, Categories categories, int id, CartStatus status) {
+	public Cart(Database DB, Categories categories, int id, CartStatus status, String owner) {
 		this.DB = DB;
 		this.categories = categories;
 		this.identity = id;
 		this.status = status;
+		this.owner = owner;
+		pullCartItems();
 	}
 
 	public Cart(Database DB, Categories categories, int identity, String owner, double payloadWeight, double totalCost, CartStatus status) {
@@ -235,7 +237,7 @@ public class Cart {
 	}
 
 	//Print all cart items (Not categorized by farm)
-	public void viewCart(boolean newCart) {
+	public void viewCart(boolean newCart, boolean admin) {
 
 
 		if(newCart){
@@ -252,12 +254,15 @@ public class Cart {
 		
 			}
 		} else {
-			
-			String statusString = Utils.stringFromStatus(status);
-			System.out.println("\nStatus: " + statusString);
-			System.out.print("--------");
-			Utils.underlineString(statusString);
 
+			pullCartItems();
+			
+			String statusString = "Status: "+ Utils.stringFromStatus(status);
+			if(admin){
+
+				statusString += " | Address: " + DB.getBuyerAddress(owner);
+			} 
+			Utils.surroundString(statusString);
 
 			products.forEach((k,v) -> {
 				System.out.println(v.getKey().toString(true, v.getValue()));
@@ -285,7 +290,7 @@ public class Cart {
 	
 		String title = "Updated Cart";
 		Utils.underlineString(title);
-		viewCart(true);
+		viewCart(true, false);
 
 
 		System.out.println("\nItems were removed due to suppluy, would you still like to checkout?");

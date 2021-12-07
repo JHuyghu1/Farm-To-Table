@@ -60,16 +60,26 @@ public class Utils {
 	}
 
 	public static void underlineString(String s){
+
+		System.out.println(s);
+
 		for(int i = 0; i < s.length(); i++){
             System.out.print('-');
         }
 		System.out.println();
 	}
 
+	public static void stringToLine(String s){
+		for(int i = 0; i < s.length(); i++){
+            System.out.print('-');
+        }
+		System.out.println();
+	}
+	
 	public static void surroundString(String s){
-		underlineString(s);
+		stringToLine(s);
 		System.out.println(s);
-		underlineString(s);
+		stringToLine(s);
 		System.out.println();
 	}
 
@@ -90,7 +100,6 @@ public class Utils {
 
 		String title = "Found: " + foundUsers.size() + userTittle + " | F = Following";
 
-		System.out.println(title);
 		underlineString(title);
 
 	}
@@ -131,7 +140,6 @@ public class Utils {
 									? "Farm: " + username
 									: "Farm: " + DB.getFarmDisplayName(username);
 
-				System.out.println(caption);
 				underlineString(caption);
 				System.out.println(farmInventory);	
 			}
@@ -154,7 +162,6 @@ public class Utils {
 			
 			
 			String caption = "Status: " + stringFromStatus(status);
-			System.out.println(caption);
 			underlineString(caption);
 
 			int index = 1;
@@ -205,7 +212,6 @@ public class Utils {
 
 	public static void invalidSelection(String selection){
 		String sel = selection + " is an invalid selection!";
-		System.out.println(sel);
 		underlineString(sel);
 
 		System.out.println();
@@ -213,7 +219,6 @@ public class Utils {
 	}
 
 	public static void printError(String e){
-		System.out.println(e);
 		underlineString(e);
 
 		System.out.println();

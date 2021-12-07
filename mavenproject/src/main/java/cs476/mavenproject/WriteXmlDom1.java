@@ -1,3 +1,5 @@
+package cs476.mavenproject;
+
 import org.w3c.dom.*;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -6,13 +8,13 @@ import javax.xml.transform.*;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
-import java.util.Scanner;
 
 public class WriteXmlDom1 {
 
     //String x = "";
     //String y = "";
 
+    /*
     public static void main(String[] args)
       throws ParserConfigurationException, TransformerException {
         String lati = "37.6415926";
@@ -24,6 +26,7 @@ public class WriteXmlDom1 {
         generate(lati, longi); //example/test input coordinates
       }
 
+      */
 
     public static void generate(String x, String y)
             throws ParserConfigurationException, TransformerException {
