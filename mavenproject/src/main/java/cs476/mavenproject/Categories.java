@@ -30,7 +30,7 @@ public class Categories {
 		fruitTable.put(3, new SubCategory("Blueberries", 100));
 		fruitTable.put(4, new SubCategory("Melon", 161));
 		fruitTable.put(5, new SubCategory("Mango", 265));
-		fruitTable.put(6, new SubCategory("Pomogranite", 282));
+		fruitTable.put(6, new SubCategory("Pomegranate", 282));
 		fruitTable.put(7, new SubCategory("Red Grapes", 151));
 		fruitTable.put(8, new SubCategory("Green Grapes", 151));
 		fruitTable.put(9, new SubCategory("Red Apple", 169));
