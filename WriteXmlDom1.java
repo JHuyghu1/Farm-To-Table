@@ -13,7 +13,18 @@ public class WriteXmlDom1 {
     //String x = "";
     //String y = "";
 
-    //public static void main(String[] args)
+    public static void main(String[] args)
+      throws ParserConfigurationException, TransformerException {
+        String lati = "37.6415926";
+        String longi = "-120.9537541";
+        if(args.length == 2){
+          lati = args[0];
+          longi = args[1];
+        }
+        generate(lati, longi); //example/test input coordinates
+      }
+
+
     public static void generate(String x, String y)
             throws ParserConfigurationException, TransformerException {
               // Scanner ob = new Scanner(System.in);
@@ -153,7 +164,7 @@ public class WriteXmlDom1 {
         con.setAttribute("radius", "nav_radius");
         con.setAttribute("wp", "STDBY");
         Element belisarius = doc.createElement("block");
-        belisarius.setAttribute("key", "F8");
+        belisarius.setAttribute("key", "d");
         belisarius.setAttribute("name", "Making delivery");
         belisarius.setAttribute("strip_button", "Make delivery");
         belisarius.setAttribute("strip_icon", "eight.png");
@@ -165,7 +176,7 @@ public class WriteXmlDom1 {
         germania.setAttribute("value", "1");
         germania.setAttribute("var", "drop_payload");
         Element heraclius = doc.createElement("block");
-        heraclius.setAttribute("key", "F9");
+        heraclius.setAttribute("key", "h");
         heraclius.setAttribute("name", "Returning to home");
         heraclius.setAttribute("strip_button", "Return home");
         heraclius.setAttribute("strip_icon", "home.png");
