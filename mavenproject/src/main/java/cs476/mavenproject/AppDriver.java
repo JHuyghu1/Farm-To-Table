@@ -14,8 +14,6 @@ public class AppDriver {
     HeadQ HeadQ;
     Scanner input;
 
-    static String INVAL_SEL = " is an invalid selction!";
-
     private enum ListType {
         FOLLOWING,
         FOLLOWERS,
@@ -60,7 +58,7 @@ public class AppDriver {
                 Farm farmAuth = Login.loginFarm();
                 if(farmAuth != null){
                     mainFarm = farmAuth;
-                    farmMainMenu();
+                    farm_mainMenu();
                 } else {
                     login();
                 }
@@ -85,7 +83,7 @@ public class AppDriver {
 
             default:
                 Utils.clearConsole();
-                System.out.println(selection + INVAL_SEL + '\n');
+                Utils.invalidSelection(selection);
                 login();
 
         }
@@ -155,7 +153,7 @@ public class AppDriver {
 
             default:
                 Utils.clearConsole();
-                System.out.println(selection + INVAL_SEL + '\n');
+                Utils.invalidSelection(selection);
                 buyerMainMenu();
 
         }
@@ -194,7 +192,7 @@ public class AppDriver {
         
                     default:
                         Utils.clearConsole();
-                        System.out.println(selection + INVAL_SEL + '\n');
+                        Utils.invalidSelection(selection);
                         buyerProductMenu();
                         break;
                 }
@@ -288,7 +286,7 @@ public class AppDriver {
                 
                 ArrayList<Product> allProductsFound = DB.customProductSearch(DB, categories, subCategory);
 
-                boolean productFound = Utils.printProductsByFarm(allProductsFound, false, mainBuyer);
+                boolean productFound = Utils.printProductsByFarm(DB, allProductsFound, false, mainBuyer);
 
                 //If no products found start a new search
                 if(!productFound){
@@ -334,9 +332,9 @@ public class AppDriver {
                             buyerMainMenu();
                             break;
 
-
                         default:
-                        System.out.println(selection + INVAL_SEL);
+                        //TODO: Check invalid
+                        Utils.invalidSelection(selection);
                         break;
                     }
 
@@ -346,7 +344,7 @@ public class AppDriver {
 
             private void productOptions_addToCart(SubCategory subCategory, ArrayList<Product> foundProducts){
 
-                Utils.printProductsByFarm(foundProducts, false, mainBuyer);
+                Utils.printProductsByFarm(DB, foundProducts, false, mainBuyer);
                 
                 String capacityString = mainBuyer.cart.currentWeight() + "/" + Constants.WEIGHT_LIMIT + " grams";
                 
@@ -360,29 +358,32 @@ public class AppDriver {
                 Product selectedProduct = null;
                 int maxQuantity = 0;
 
-                while(!validSelction){
 
-                    System.out.print("Product ID: ");
-                    selection = input.nextLine();
+                System.out.print("Product ID: ");
+                selection = input.nextLine();
 
-                    try{
-                        int productId = Integer.parseInt(selection);
-                        if(!foundProducts.stream().anyMatch(p -> productId == p.identity())) throw new Exception("Product not in search results!");
-                        selectedProduct = foundProducts.stream().filter(p -> p.identity() == productId).findFirst().orElse(null);
-                        if(selectedProduct.quantity() == 0) throw new Exception("We're all out!");
-                        maxQuantity = mainBuyer.cart.maxQuantity(selectedProduct);
+                try{
+                    int productId = Integer.parseInt(selection);
+                    if(!foundProducts.stream().anyMatch(p -> productId == p.identity())) throw new Exception("Product not in search results!");
+                    selectedProduct = foundProducts.stream().filter(p -> p.identity() == productId).findFirst().orElse(null);
+                    if(selectedProduct.quantity() == 0) throw new Exception("We're all out!");
+                    maxQuantity = mainBuyer.cart.maxQuantity(selectedProduct);
 
-                        if(maxQuantity < 1) throw new Exception("You don't have enough room for that product!");
-                        validSelction = true;
+                    if(maxQuantity < 1) throw new Exception("You don't have enough room for that product!");
+                    validSelction = true;
 
-                    }catch(NumberFormatException e){
-                        System.out.println("Enter an integer!");
-                        
-                    }catch(Exception e){
-                        System.out.println(e.getMessage());
-                    }
-
+                }catch(NumberFormatException e){
+                    Utils.clearConsole();
+                    Utils.printError("Enter an integer!");
+                    productOptions_addToCart(subCategory, foundProducts);
+                    
+                }catch(Exception e){
+                    Utils.clearConsole();
+                    Utils.printError(e.getMessage());
+                    productOptions_addToCart(subCategory, foundProducts);
                 }
+
+                
 
                 validSelction = false;
 
@@ -471,7 +472,7 @@ public class AppDriver {
 
                 default:
                     Utils.clearConsole();
-                    System.out.println(selection + INVAL_SEL + '\n');
+                    Utils.invalidSelection(selection);
                     buyerUserMenu();
                     break;
             }
@@ -497,14 +498,17 @@ public class AppDriver {
                 Utils.clearConsole();
 
                 if(foundUsers.isEmpty()){
-                    System.out.println("No users found!\n");
+                    Utils.printError("No Users Found!");
                     buyerUserMenu();
 
                 } else {
 
-                    Boolean smallResult = foundUsers.size() <= 10;
+                    Boolean smallResult = foundUsers.size() <= Constants.INDEX_LIMIT;
 
-                    if(smallResult) userViewSmall(foundUsers, ListType.SEARCH); else userViewLarge(foundUsers, 0, ListType.SEARCH);
+                    if(smallResult)
+                        userViewSmall(foundUsers, ListType.SEARCH);
+                    else
+                        userViewLarge(foundUsers, 0, ListType.SEARCH);
 
                 }
                 
@@ -531,7 +535,7 @@ public class AppDriver {
     
                 } else {
 
-                    Boolean smallResult = foundUsers.size() <= 10;
+                    Boolean smallResult = foundUsers.size() <= Constants.INDEX_LIMIT;
 
                     if(smallResult) userViewSmall(foundUsers, type); else userViewLarge(foundUsers, 0, type);
 
@@ -560,7 +564,7 @@ public class AppDriver {
 
                     while(!validSelection){
 
-                        System.out.print("\nYour selection: ");
+                        System.out.print("Your selection: ");
                         selection = input.nextLine();
 
                         switch(selection){
@@ -583,7 +587,8 @@ public class AppDriver {
                                 break;
 
                             default:
-                            System.out.println(selection + INVAL_SEL);
+                            //TODO: check invalid
+                            Utils.invalidSelection(selection);
                             break;
 
                         }
@@ -619,7 +624,7 @@ public class AppDriver {
 
                 if(startIndex == 0){
                     menu = "1 - Next Page | 2 - Select User | 3 - Search | 4 - Home";
-                } else if(endIndex > allUsers.size()) {
+                } else if(endIndex+1 > allUsers.size()) {
                     menu = "1 - Previous Page | 2 - Select User | 3 - Search | 4 - Home";
                 } else {
                     menu = "1 - Previous Page | 2 - Next Page | 3 - Select User | 4 -  Search | 5 - Home";
@@ -660,12 +665,15 @@ public class AppDriver {
                                 break;
 
                             default:
-                            System.out.println(selection + INVAL_SEL);
+                            Utils.clearConsole();
+                            Utils.invalidSelection(selection);
+                            userViewLarge(allUsers, startIndex, type);
+                            
                             break;
 
                         }
 
-                    } else if(endIndex > allUsers.size()) {
+                    } else if(endIndex+1 > allUsers.size()) {
                         switch(selection){
                             case "1":
                                 validSelection = true;
@@ -693,7 +701,9 @@ public class AppDriver {
                                 break;
 
                             default:
-                            System.out.println(selection + INVAL_SEL);
+                            Utils.clearConsole();
+                            Utils.invalidSelection(selection);
+                            userViewLarge(allUsers, startIndex, type);
                             break;
 
                         }
@@ -733,7 +743,9 @@ public class AppDriver {
                                 break;
 
                             default:
-                                System.out.println(selection + INVAL_SEL);
+                                Utils.clearConsole();
+                                Utils.invalidSelection(selection);
+                                userViewLarge(allUsers, startIndex, type);
                                 break;
 
                         }
@@ -758,20 +770,23 @@ public class AppDriver {
                         int selectedInt = Integer.parseInt(selection);
 
                         if(selectedInt > endIndex || selectedInt < startIndex+1 || selectedInt > allUsers.size()){
-                            throw new Exception("That number isn't in the results\n");
+                            throw new Exception("Can't find number!");
                         }
-                        
                         Buyer selectedUser = allUsers.get(selectedInt-1);
-
                         Utils.clearConsole();
-
                         selectedUserAction(selectedUser, allUsers, startIndex, type);
 
                     }catch(NumberFormatException e){
-                        System.out.println("Enter an integer!\n");
+
+                        Utils.clearConsole();
+                        Utils.printError("Enter an integer!");
+                        selectUserFromList(allUsers, startIndex, endIndex, type);
 
                     }catch(Exception e){
-                        System.out.println(e.getMessage());
+
+                        Utils.clearConsole();
+                        Utils.printError(e.getMessage());
+                        selectUserFromList(allUsers, startIndex, endIndex, type);
                     }
 
 
@@ -781,7 +796,6 @@ public class AppDriver {
             
             private void selectedUserAction(Buyer selectedUser, ArrayList<Buyer> allUsers, int startIndex, ListType type){
 
-                Boolean validSelection = false;  
                 String following = selectedUser.isFollowing()
                                     ? "True"
                                     : "False";
@@ -798,92 +812,91 @@ public class AppDriver {
 
                 Utils.surroundString(menu);
 
-                while(!validSelection){
+                System.out.print("Your selection: ");
+                selection = input.nextLine();
 
-                    System.out.print("Your selection: ");
-                    selection = input.nextLine();
+                if(selectedUser.isFollowing()){
+                    switch(selection){
 
-                    if(selectedUser.isFollowing()){
-                        switch(selection){
-
-                            case"1":
-                                validSelection = true;
-                                DB.unfollowUser(mainBuyer.username(), selectedUser.username());
-                                selectedUser.isFollowing(false);
-                                Utils.clearConsole();
-                                System.out.println("You unfollowed " + selectedUser.username() + "!\n");
-                                if(type == ListType.FOLLOWERS){
-                                    viewRelatedUsers(false);
-                                }else if(type == ListType.FOLLOWING){
-                                    viewRelatedUsers(true);
-                                } else if(type == ListType.SEARCH){
-                                    userViewLarge(allUsers, startIndex, type);
-                                }
-                                break;
-            
-                            case"2":
-                                validSelection = true;
-                                Utils.clearConsole();
-                                if(type == ListType.FOLLOWERS){
-                                    viewRelatedUsers(false);
-                                }else if(type == ListType.FOLLOWING){
-                                    viewRelatedUsers(true);
-                                } else if(type == ListType.SEARCH){
-                                    userViewLarge(allUsers, startIndex, type);
-                                }
-                                break;
-            
-                            case"3":
-                                validSelection = true;
-                                Utils.clearConsole();
-                                buyerMainMenu();
-                                break;
-                            default:
-                                System.out.println(selection + INVAL_SEL + '\n');
-                                break;
-            
-                        }
-            
-                    } else {
-                        switch(selection){
-
-                            case"1":
-                                validSelection = true;
-                                DB.followUser(mainBuyer.username(), selectedUser.username());
-                                selectedUser.isFollowing(true);
-                                Utils.clearConsole();
-                                System.out.println("You followed " + selectedUser.username() + "!\n");
-                                if(type == ListType.FOLLOWERS){
-                                    viewRelatedUsers(false);
-                                }else if(type == ListType.FOLLOWING){
-                                    viewRelatedUsers(true);
-                                } else if(type == ListType.SEARCH){
-                                    userViewLarge(allUsers, startIndex, type);
-                                }
-                                break;
-            
-                            case"2":
-                                validSelection = true;
-                                Utils.clearConsole();
+                        case"1":
+                            DB.unfollowUser(mainBuyer.username(), selectedUser.username());
+                            selectedUser.isFollowing(false);
+                            Utils.clearConsole();
+                            System.out.println("You unfollowed " + selectedUser.username() + "!\n");
+                            
+                            if(type == ListType.FOLLOWERS){
+                                viewRelatedUsers(false);
+                            }else if(type == ListType.FOLLOWING){
+                                viewRelatedUsers(true);
+                            } else if(type == ListType.SEARCH){
                                 userViewLarge(allUsers, startIndex, type);
-                                break;
-            
-                            case"3":
-                                validSelection = true;
-                                Utils.clearConsole();
-                                buyerMainMenu();
-                                break;
-                            default:
-                                System.out.println(selection + INVAL_SEL + '\n');
-                                break;
-            
-                        }
-            
-                    }
+                            }
+                            break;
+        
+                        case"2":
+                            Utils.clearConsole();
+                            if(type == ListType.FOLLOWERS){
+                                viewRelatedUsers(false);
+                            }else if(type == ListType.FOLLOWING){
+                                viewRelatedUsers(true);
+                            } else if(type == ListType.SEARCH){
+                                userViewLarge(allUsers, startIndex, type);
+                            }
+                            break;
+        
+                        case"3":
+                            Utils.clearConsole();
+                            buyerMainMenu();
+                            break;
 
+                        default:
+                            Utils.clearConsole();
+                            Utils.invalidSelection(selection);
+                            selectedUserAction(selectedUser, allUsers, startIndex, type);
+                            break;
+                    }
+                    
+                } else {
+
+                    switch(selection){
+
+                        case"1":
+                            DB.followUser(mainBuyer.username(), selectedUser.username());
+                            selectedUser.isFollowing(true);
+                            Utils.clearConsole();
+                            System.out.println("You followed " + selectedUser.username() + "!\n");
+
+                            if(type == ListType.FOLLOWERS){
+                                viewRelatedUsers(false);
+                            }else if(type == ListType.FOLLOWING){
+                                viewRelatedUsers(true);
+                            } else if(type == ListType.SEARCH){
+                                userViewLarge(allUsers, startIndex, type);
+                            }
+                            break;
+        
+                        case"2":
+                            Utils.clearConsole();
+                            userViewLarge(allUsers, startIndex, type);
+                            break;
+        
+                        case"3":
+                            Utils.clearConsole();
+                            buyerMainMenu();
+                            break;
+
+                        default:
+                            Utils.clearConsole();
+                            Utils.invalidSelection(selection);
+                            selectedUserAction(selectedUser, allUsers, startIndex, type);
+                            break;
+                        
+        
+                    }
+        
                 }
 
-                
+            
 
 
             }
@@ -958,7 +971,7 @@ public class AppDriver {
 
                 default:
                     Utils.clearConsole();
-                    System.out.println(selection + INVAL_SEL);
+                    Utils.invalidSelection(selection);
                     buyerCartMenu();
                     break;
             }
@@ -1050,7 +1063,8 @@ public class AppDriver {
                         break;
 
                     default:
-                        System.out.println(selection + INVAL_SEL);
+                        //TODO: Check invalid
+                        Utils.invalidSelection(selection);
                         break;
 
 
@@ -1168,7 +1182,7 @@ public class AppDriver {
         }
             
     // ------- FARM ---------
-    private void farmMainMenu(){
+    private void farm_mainMenu(){
 
         String selection;
 
@@ -1185,11 +1199,13 @@ public class AppDriver {
         switch(selection){
             case "1":
                 Utils.clearConsole();
-                farmMainMenu_Inventory();
+                farm_inventory();
                 break;
 
             case "2":
                 Utils.clearConsole();
+                ArrayList<Product> sales = mainFarm.soldHistory();
+                indexSalesView(sales, 0);
                 break;
 
             case "3":
@@ -1203,14 +1219,14 @@ public class AppDriver {
 
             default:
                 Utils.clearConsole();
-                System.out.println(selection + INVAL_SEL);
-                farmMainMenu();
+                Utils.invalidSelection(selection);
+                farm_mainMenu();
 
         }
 
     }
     
-    private void farmMainMenu_Inventory(){
+    private void farm_inventory(){
         String title = "Your Inventory | Press ENTER to go back";
         System.out.println(title);
         Utils.underlineString(title);
@@ -1219,11 +1235,143 @@ public class AppDriver {
 
         input.nextLine();
         Utils.clearConsole();
-        farmMainMenu();
+        farm_mainMenu();
             
   
     }
+       
+    private void indexSalesView(ArrayList<Product> products, int startIndex){
+        int indexLimit = Constants.INDEX_LIMIT;
+
+        String menu = null;
+        String selection = "";
+        int endIndex = startIndex;
+
+        double totalRevenue = products.stream().mapToDouble(p-> p.price() * p.totalSold()).sum();
+        String title = "Sales Portal | Total Revenue: $" + totalRevenue;
+        System.out.println(title);
+        Utils.underlineString(title);
+
+        if(products.isEmpty()){
+
+            System.out.println("You havn't made any salses yet!\n");
+
+        } else {
+            for(int i = startIndex; i < (startIndex+indexLimit) && i < products.size(); i++){
+                System.out.println(products.get(i).salesString() + "\n--");
+                endIndex++;
+            }
+        }
+
+        
+
+        if(products.size() < indexLimit){
+            menu = "1 - Back";
+            
+        }else if(startIndex == 0){
+            menu = "1 - Next Page | 2 - Back";
+        } else if(endIndex > products.size()) {
+            menu = "1 - Previous Page | 2 - Back";
+        } else {
+            menu = "1 - Previous Page | 2 - Next Page | 3 - Back";
+        }
+        
+        Utils.surroundString(menu);
+
+
+        System.out.print("Your selection: ");
+        selection = input.nextLine();
+
+        if(products.size() < indexLimit){
+
+            switch(selection){
+                case "1":
+                    Utils.clearConsole();
+                    farm_mainMenu();
+                    break;
+
+                default:
+                    Utils.clearConsole();
+                    Utils.invalidSelection(selection);
+                    indexSalesView(products, startIndex);
+                    break;
+
+                }
+
+        }else if(startIndex == 0){
+
+            switch(selection){
+                case "1":
+                    Utils.clearConsole();
+                    indexSalesView(products, startIndex);
+                    break;
+
+                case "2":
+                    Utils.clearConsole();
+                    farm_mainMenu();
+                    break;
+
+                default:
+                Utils.clearConsole();
+                Utils.invalidSelection(selection);
+                indexSalesView(products, startIndex);
+                break;
+
+            }
+
+        } else if(endIndex > products.size()) {
+            switch(selection){
+                case "1":
+                    Utils.clearConsole();
+                    indexSalesView(products, startIndex-indexLimit);
+                    break;
+
+                // Home
+                case "4":
+                    Utils.clearConsole();
+                    farm_mainMenu();
+                    break;
+
+                default:
+                    Utils.clearConsole();
+                    Utils.invalidSelection(selection);
+                    indexSalesView(products, startIndex);
+                    break;
+
+            }
+
+        } else {
+
+            switch(selection){
+                case "1":
+                    Utils.clearConsole();
+                    indexSalesView(products, startIndex-indexLimit);
+                    break;
+
+                case "2":
+                    Utils.clearConsole();
+                    indexSalesView(products, endIndex);
+                    break;
+
+                // Home
+                case "5":
+                    Utils.clearConsole();
+                    farm_mainMenu();
+                    break;
+
+                default:
+                    Utils.clearConsole();
+                    Utils.invalidSelection(selection);
+                    indexSalesView(products, startIndex);
+
+            }
+
+        }
+
+
     
+    }
+   
     // ------- ADMIN ---------
     public void adminMainMenu() {
         String selection;
@@ -1256,7 +1404,7 @@ public class AppDriver {
 
             default:
             Utils.clearConsole();
-            System.out.println(selection + INVAL_SEL);
+            Utils.invalidSelection(selection);
             adminMainMenu();
 
         }
@@ -1269,7 +1417,7 @@ public class AppDriver {
         System.out.println("Head Quarters Inventory");
         System.out.println("-----------------------");
 
-        HeadQ.viewFarms();
+        boolean noFarms = HeadQ.viewFarms() < 1;
 
         System.out.println();
 
@@ -1281,10 +1429,15 @@ public class AppDriver {
 
         switch(selection){
             case "1":
-                Utils.clearConsole();
-                Farm farm = HeadQ.selectFarm();
-                Utils.clearConsole();
-                adminMainMenu_Farm(farm);
+            Utils.clearConsole();
+
+                if(noFarms){
+                    adminMainMenu_Farms();
+                } else {
+                    Farm farm = HeadQ.selectFarm();
+                    Utils.clearConsole();
+                    adminMainMenu_Farm(farm);    
+                }
                 break;
 
             case "2":
@@ -1300,7 +1453,7 @@ public class AppDriver {
 
             default:
                 Utils.clearConsole();
-                System.out.println(selection + INVAL_SEL);
+                Utils.invalidSelection(selection);
                 adminMainMenu_Farms();
 
         }
@@ -1328,30 +1481,36 @@ public class AppDriver {
             selection = input.nextLine();
 
             switch(selection){
-            case "1":
-                validSelction = true;
+                case "1":
+                    validSelction = true;
+                    Utils.clearConsole();
+                    HeadQ.createProduct(farm);
+                    adminMainMenu_Farm(farm);
+                    break;
+                
+                case "2":
                 Utils.clearConsole();
-                HeadQ.createProduct(farm);
-                adminMainMenu_Farm(farm);
-                break;
-            
-            case "2":
-                validSelction = true;
-                Utils.clearConsole();
-                HeadQ.restockProduct(farm);
-                adminMainMenu_Farm(farm);
-                break;
+                    if(farm.pullInventory() > 0){
+                        validSelction = true;
+                        HeadQ.restockProduct(farm);
+                        adminMainMenu_Farm(farm);
+                    } else {
+                        validSelction = true;
+                        adminMainMenu_Farm(farm);
+                    }
+                    break;
 
-            case "3":
-                validSelction = true;
-                Utils.clearConsole();
-                adminMainMenu_Farms();
-                break;
+                case "3":
+                    validSelction = true;
+                    Utils.clearConsole();
+                    adminMainMenu_Farms();
+                    break;
 
-            default:
-                System.out.println(selection + INVAL_SEL + '\n');
+                default:
+                    //TODO: Check invalid
+                    Utils.invalidSelection(selection);
 
-        }
+                }
         
         }
     }

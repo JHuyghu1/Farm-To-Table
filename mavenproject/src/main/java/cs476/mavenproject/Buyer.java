@@ -13,6 +13,8 @@ public class Buyer {
 
 	//Used for buyer search results
 	private Boolean isFollowing = false;
+	private int numFriendsFollowing = 0;
+
 
 	//Dependencies
 	Cart cart;
@@ -31,10 +33,17 @@ public class Buyer {
 	}
 
 	//Used for search querry
+	public Buyer(final String username, final int numFriendsFollowing){
+		this.username = username;
+		this.numFriendsFollowing = numFriendsFollowing;
+	}
+
+	//Used for recomendations querry
 	public Buyer(final String username, final boolean isFollowing){
 		this.username = username;
 		this.isFollowing = isFollowing;
 	}
+
 
 	public String id() {
 		return id;
@@ -64,6 +73,15 @@ public class Buyer {
 		isFollowing = status;
 	}
 
+	public int numFriendsFollowing(){
+		return numFriendsFollowing;
+	}
+
+	public void numFriendsFollowing(int setNum){
+		 numFriendsFollowing = setNum;
+	}
+
+
 	public ArrayList<Buyer> following() {
 		return following;
 	}
@@ -79,35 +97,6 @@ public class Buyer {
 
 	public boolean isFollowing(Buyer buyer) {
 		return following.contains(buyer);
-
-	}
-
-	public void follow(Buyer buyer) {
-
-		if (!isFollowing(buyer)) {
-
-			following.add(buyer);
-
-			//DB.followUser(username, buyer.username()); get Buyer a's username 
-			
-
-		} else {
-			System.out.printf("Already following " + buyer.username);
-		}
-
-	}
-
-	public void unFollow(Buyer buyer) {
-
-		if (isFollowing(buyer)) {
-			following.remove(buyer);
-			//DB.unfollowUser(username, buyer.username());
-		
-
-		} else {
-			// TODO: Pull username from database
-			System.out.printf("You are not following " + id);
-		}
 
 	}
 

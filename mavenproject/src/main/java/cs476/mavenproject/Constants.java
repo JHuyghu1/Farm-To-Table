@@ -7,5 +7,4 @@ public class Constants {
 
 	static final int INDEX_LIMIT = 5;
 
-
 }

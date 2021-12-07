@@ -11,6 +11,7 @@ public class Product {
 	private double weight;
 	private int quantity;
 	private String farm;
+	private int sold;
 	Database DB;
 
 	public Product(Database DB, int identity, String name, Category category, SubCategory subCategory, double price, int quantity, String farm) {
@@ -22,6 +23,16 @@ public class Product {
 		this.weight = subCategory.weight();
 		this.quantity = quantity;
 		this.farm = farm;
+	}
+
+	//Used for sales
+	public Product(int identity, String name, double price, int sold, Category category, SubCategory subCategory){
+		this.identity = identity;
+		this.name = name;
+		this.sold = sold;
+		this.category = category;
+		this.subCategory = subCategory;
+		this.price = price;
 	}
 
 	public int identity() {
@@ -56,6 +67,11 @@ public class Product {
 		return quantity;
 	}
 
+	public int totalSold() {
+		return sold;
+	}
+
+
 	public String toString(boolean cartView, int totalInCart) {
 
 		return cartView
@@ -68,5 +84,10 @@ public class Product {
 
 	}
 
+	public String salesString() {
+
+		return  "|~ ID: " + identity + " | " + name + " | " + subCategory.name() +  " | Sold: " + sold + " | Revenue: $" + (price * sold);
+
+	}
 }
 

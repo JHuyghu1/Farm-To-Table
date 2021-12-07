@@ -16,36 +16,52 @@ public class HeadQ {
 	public HeadQ(Database DB, Scanner input, Categories categories) {
 		this.DB = DB;
 		this.input = input;
-		this.farms = DB.getAllFrams(DB, categories);
 		this.categories = categories;
 	}
 
+	public int pullFarms(){
+		farms = DB.getAllFrams(DB, categories);
+		return farms.size();
+	}
 	public void createNewFarm() {
 
 		String username = "";
+		String displayName = "";
         String password = "";
+		Boolean validEntry = false;
 
         System.out.println("Add a farm");
         System.out.println("--------------\n");
 
-        while(username == ""){
-            System.out.print("Enter their new username: ");
-            String tempName = input.nextLine();
+        while(!validEntry){
 
-            if(!DB.farmUsernameExists(tempName)){
-                username = tempName;
-            } else {
-                System.out.println("That username is already taken!\n");
+            System.out.print("Enter their new username: ");
+            username = input.nextLine();
+			username.toLowerCase();
+
+            if(!Utils.validUsername(username)){
+				System.out.println("Invalid Username!\n");
+
+            } else if(DB.farmUsernameExists(username)){
+				System.out.println("That username is already taken!\n");
+
+			}else {
+				validEntry = true;
             }
         }
 
-        System.out.print("Enter your pasword: ");
+
+		System.out.print("Enter their display name: ");
+		displayName = input.nextLine();
+        
+
+        System.out.print("Enter their pasword: ");
         password = input.nextLine();
 
 
-        Farm tempFarm = DB.createFarmNode(DB, categories, username, password);
+        Farm farm = DB.createFarmNode(DB, categories, username, displayName, password);
         
-		farms.add(tempFarm);
+		farms.add(farm);
 
 		Utils.clearConsole();
 
@@ -189,7 +205,7 @@ public class HeadQ {
 		String selection = ""; 
 		boolean validSelection = false;
 
-		String title = "Restock a product";
+		String title = "Select a product to restock";
 		Utils.surroundString(title);
 
 		farm.viewInventory();
@@ -197,12 +213,12 @@ public class HeadQ {
 
 		while(!validSelection){
 
-			System.out.print("Enter Product ID: ");
+			System.out.print("\nEnter Product ID: ");
 			selection = input.nextLine();
 
 			try{
 				poductId = Integer.parseInt(selection);
-				if(!farm.carriesProduct(poductId)) throw new Exception("This farm don't carry this product");
+				if(!farm.carriesProduct(poductId)) throw new Exception("Product Not Found!");
 				product = farm.getProduct(poductId);
 				validSelection = true;
 
@@ -282,10 +298,25 @@ public class HeadQ {
 
 	}
 
-	public void viewFarms(){
-		for(int i = 1; i <= farms.size(); i++){
-			System.out.println((i + " - " + farms.get(i-1).name()));
+	public int viewFarms(){
+		
+		if(pullFarms() < 1){
+			System.out.println("\nNo farms in this HQ!");
+
+		} else {
+
+			for(int i = 1; i <= farms.size(); i++){
+
+				String username = farms.get(i-1).name();
+				String displayName = farms.get(i-1).displayName();
+
+				System.out.println((i + " - " + username + " - " + displayName));
+			}
+	
 		}
+
+
+		return farms.size();
 	}
 
 	private void liveOrderOptions(ArrayList<Cart> orders){

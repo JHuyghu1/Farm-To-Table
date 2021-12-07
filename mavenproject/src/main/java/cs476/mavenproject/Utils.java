@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import cs476.mavenproject.Cart.CartStatus;
@@ -25,16 +27,16 @@ public class Utils {
 
     public static CartStatus statusFromString(String status){
 		switch(status){
-			case"New":
+			case"new":
 				return CartStatus.NEW;
 
-			case"Ordered":
+			case"ordered":
 				return CartStatus.ORDERED;
 
-			case"Shipped":
+			case"shipped":
 				return CartStatus.SHIPPED;
 
-			case"Delivered":
+			case"delivered":
 				return CartStatus.DELIVERED;
 			default:
 				return null;
@@ -43,15 +45,15 @@ public class Utils {
 
 	public static String stringFromStatus( CartStatus status){
 		if(status == CartStatus.NEW){
-			return "New";
+			return "new";
 
 		} else if( status == CartStatus.ORDERED){
-			return "Ordered";
+			return "ordered";
 
 		} else if( status == CartStatus.SHIPPED){
-			return "Shipped";
+			return "shipped";
 		} else if( status == CartStatus.DELIVERED){
-			return "Delivered";
+			return "delivered";
 		} else {
 			return null;
 		}
@@ -94,7 +96,7 @@ public class Utils {
 	}
 
 	//Return true if product is found
-	public static boolean printProductsByFarm(ArrayList<Product> products, boolean showAll, Buyer mainBuyer){
+	public static boolean printProductsByFarm(Database DB, ArrayList<Product> products, boolean showAll, Buyer mainBuyer){
 
 		final boolean anyProductFound[] = {false};
 		Optional<Buyer> buyer = Optional.ofNullable(mainBuyer);
@@ -104,7 +106,7 @@ public class Utils {
 		groupByFarm =  products.stream()
 		.collect(Collectors.groupingBy(Product::farm));
 
-		groupByFarm.forEach((farmName, productList) -> {
+		groupByFarm.forEach((username, productList) -> {
 
 			String farmInventory = "";
 			boolean emptyFarm = true;
@@ -124,7 +126,11 @@ public class Utils {
 			}
 
 			if(!emptyFarm){
-				String caption = "Farm: " + farmName;
+				
+				String caption = (showAll) 
+									? "Farm: " + username
+									: "Farm: " + DB.getFarmDisplayName(username);
+
 				System.out.println(caption);
 				underlineString(caption);
 				System.out.println(farmInventory);	
@@ -182,4 +188,35 @@ public class Utils {
 		return hashMap;
 		}
 
+	public static boolean validUsername(String username){
+		String regex = "^[a-z0-9_]\\w{3,19}$";
+  
+        Pattern p = Pattern.compile(regex);
+  
+        if (username == null) {
+            return false;
+        }
+		
+        Matcher m = p.matcher(username);
+  
+        return m.matches();
+
+	}
+
+	public static void invalidSelection(String selection){
+		String sel = selection + " is an invalid selection!";
+		System.out.println(sel);
+		underlineString(sel);
+
+		System.out.println();
+
+	}
+
+	public static void printError(String e){
+		System.out.println(e);
+		underlineString(e);
+
+		System.out.println();
+
+	}
 }

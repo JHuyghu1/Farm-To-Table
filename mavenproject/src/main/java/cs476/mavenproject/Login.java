@@ -21,18 +21,25 @@ public class Login {
         String username = "";
         String password = "";
         String address = "";
+        boolean validEntry = false;
 
         System.out.println("Create a new account");
         System.out.println("--------------------\n");
 
-        while(username == ""){
-            System.out.print("Enter your new username: ");
-            String tempName = input.nextLine();
+        while(!validEntry){
 
-            if(!DB.buyerUsernameExists(tempName)){
-                username = tempName;
-            } else {
-                System.out.println("That username is already taken!\n");
+            System.out.print("Enter your new username: ");
+            username = input.nextLine();
+			username.toLowerCase();
+
+            if(!Utils.validUsername(username)){
+				System.out.println("Invalid Username!\n");
+
+            } else if(DB.farmUsernameExists(username)){
+				System.out.println("That username is already taken!\n");
+
+			}else {
+				validEntry = true;
             }
         }
 
