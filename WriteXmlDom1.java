@@ -10,17 +10,19 @@ import java.util.Scanner;
 
 public class WriteXmlDom1 {
 
+    //String x = "";
+    //String y = "";
 
-
-    public static void main(String[] args)
+    //public static void main(String[] args)
+    public static void generate(String x, String y)
             throws ParserConfigurationException, TransformerException {
-              Scanner ob = new Scanner(System.in);
-              System.out.println("Enter latitude coordinate:");
-              String x = ob.nextLine();
-              System.out.println("Enter longitude coordinate:");
-              String y = ob.nextLine();
-              //String x = "37.639399"; //replace with input
-              //String y = "-120.946480"; //replace with input
+              // Scanner ob = new Scanner(System.in);
+              // System.out.println("Enter latitude coordinate:");
+              // String x = ob.nextLine();
+              // System.out.println("Enter longitude coordinate:");
+              // String y = ob.nextLine();
+              //String x = args[0];
+              //String y = args[1];
 
         DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
         DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -299,6 +301,5 @@ public class WriteXmlDom1 {
         transformer.transform(source, result);
 
     }
-
 
 }
